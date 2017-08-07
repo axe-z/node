@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon ./playground/arrow.js",
+    "start": "node server.js",
     "app": "nodemon app.js",
     "server": "nodemon server.js -e js,hbs",
     "test": "NODE_ENV=test nodemon --exec 'mocha --recursive -R min'"

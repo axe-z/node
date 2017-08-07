@@ -200,6 +200,8 @@ next();
 ///////////////EXPRESS MIDDLEWARE ( TOUS LES APP.USE SONT DU MIDDLEWARE )
 
 ***************************************************************************************************
+VOIR VIDEO 7 - 8 - 9 de andrewmead ( fantasssstic ) de node. pour faire une key ssh si jamais je change d ordi.
+
 
 ///////////////GIT
 git --version
@@ -236,14 +238,60 @@ git add nomDuFichier     ex: git add package.json
 git status va nous montrer que le package.json est maintenant dnas la liste verte(que ca va tracker)
 
 
-git add public/   --va ajouter le rep a tracker. 
+git add public/   --va ajouter le rep a tracker.
+
+.gitignore    //creer un fichier .gitignore:
+// node_modules/
+// server.log
+// playground/
+
+
+git commit -m 'initial commit'
+
+git push
+
+les SSH KEYS
+j en ai une , pour verifier :
+ls -al ~/.ssh
+//-rw-------   1 axez  staff  3247 Apr 11 10:34 id_rsa
+//-rw-r--r--   1 axez  staff   740 Apr 11 10:34 id_rsa.pub
+
+
 
 ///////////////GIT
 
 
+///////////////HEROKU
+
+const port = process.env.PORT || 3000;
+
+herooku a besoin du start script dans package.json
+  "start": "node server.js",
+
+
+git add .
+
+
+
+
+
+///////////////HEROKU
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ***************************************************************************************************
-***************************************************************************************************
+**********************************      EXPRESS      **********************************************
 ***************************************************************************************************
 ***************************************************************************************************

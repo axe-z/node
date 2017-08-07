@@ -2,7 +2,7 @@ const express = require('express');
 var hbs = require('hbs');
 const app = express();
 const fs = require('fs');
-
+const port = process.env.PORT || 3000;
 ///////////middleware
 
 ///HBS
@@ -21,7 +21,6 @@ hbs.registerHelper('screamIt', (text) => {
 
 
 ///////////MIDDLEWARE ( TOUS LES APP.USE SONT DU MIDDLEWARE )
-
 
 
 
@@ -100,6 +99,6 @@ app.get('/bad' , (req, res) => {
 
 
 /////////////Serveur
-app.listen(3000, () => {
-  console.log('ca roule sur 3000');
+app.listen(port, () => {
+  console.log(`ca roule sur ${port}`);
 });
