@@ -208,7 +208,7 @@ git --version
 //git version 2.11.0 (Apple Git-81)
 
 
-git init
+0- git init
 //va creer un fichier .git
 
 git status
@@ -250,29 +250,50 @@ git commit -m 'initial commit'
 
 git push
 
+A PARTIR D ICI :
+.gitignore
+0- git init  //creation , ensuite aller sur github pour les liens.
+
+1- git status
+
+2- git add .    //. ajoute TOUT
+
+3- git commit -m 'deuxieme commit'
+
+4- git push
+
+fin
+/*
 les SSH KEYS
 j en ai une , pour verifier :
 ls -al ~/.ssh
 //-rw-------   1 axez  staff  3247 Apr 11 10:34 id_rsa
 //-rw-r--r--   1 axez  staff   740 Apr 11 10:34 id_rsa.pub
 
-
-
+*/
 ///////////////GIT
 
 
 ///////////////HEROKU
-
+dans SERVER.js
 const port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+  console.log(`ca roule sur ${port}`);
+});
+
 
 herooku a besoin du start script dans package.json
   "start": "node server.js",
 
 
-git add .
+0-heroku create  //va creer la db
 
 
+1- git push heroku  //va pitcher le contenu du git sur heroku
 
+
+2- heroku open   //va ouvrir le site avec notre stock.
 
 
 ///////////////HEROKU
