@@ -70,9 +70,9 @@ app.get('/about' , (req, res) => {
     title: 'About page'
  });
 });
+
 app.get('/projects' , (req, res) => {
  res.render('projects.hbs', {
-   //currentYear: new Date().getFullYear(),
     name: 'AXE-Z',
     title: 'projects page'
  });

@@ -7,17 +7,19 @@
     "start": "node server.js",
     "app": "nodemon app.js",
     "server": "nodemon server.js -e js,hbs",
-    "test": "NODE_ENV=test nodemon --exec 'mocha --recursive -R min'"
+    "test": "mocha **/*.test.js",
+    "moc": "nodemon --exec  \"npm test\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.16.2",
     "body-parser": "^1.17.2",
+    "expect": "^1.20.2",
     "express": "^4.15.3",
     "hbs": "^4.0.1",
     "lodash": "^4.17.4",
-    "mocha": "^3.4.2",
+    "mocha": "^3.5.0",
     "mongodb": "^2.2.30",
     "mongoose": "^4.11.3",
     "nodemon": "^1.11.0",
