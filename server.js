@@ -28,7 +28,7 @@ hbs.registerHelper('screamIt', (text) => {
 app.use((req, res, next) => {
  //si je call pas next, ce qui arrive en bas arrivera pas.
  const now = new Date().toString();
- const log = `${now}: ${req.method} ${req.url}`   //Sun Aug 06 2017 13:10:30 GMT-0400 (EDT): GET / (donc la racine)
+ const log = `${now}: ${req.method} ${req.url} `   //Sun Aug 06 2017 13:10:30 GMT-0400 (EDT): GET / (donc la racine)
  console.log(log);
 
  fs.appendFileSync('server.log', log + '\n');
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 //App.use a besoin du ABSOLUTE PATH , c est a dire du disque dur a ici..
 //et les fichier vont bouger... donc il y a une solution: __dirname qui devient l equivalant de tout le path jusqu au rep
 
-app.use( express.static( __dirname + '/public')); //PUBLIC DEVIENT LA RACINE.
+app.use(express.static( __dirname + '/public')); //PUBLIC DEVIENT LA RACINE.
 //DONC:
 //http://localhost:3000/help.html  et non pas public/help
 

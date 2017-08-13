@@ -421,10 +421,22 @@ const asyncAdd = (a, b, cb) => {
 
 
 SPIES
-
-  createSpy
+ Sert quand plusieurs fonction doivent connecter , revoir film -10j avais pas le gout...
 
 expect.createSpy()
+
+const expect = require('expect');
+
+describe("test de spies", () => {
+
+	it("should call le spy", () => {
+		let spy = expect.createSpy();
+    spy('Ben', 40);
+    expect(spy).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith('Ben', 40);
+	});
+
+});
 
 ///////////////MOCHA
 
@@ -436,3 +448,8 @@ expect.createSpy()
 **********************************      EXPRESS      **********************************************
 ***************************************************************************************************
 ***************************************************************************************************
+
+
+NEXT
+
+notesMongoDB.js

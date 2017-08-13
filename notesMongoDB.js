@@ -1,6 +1,268 @@
-PART II ligne 1295
+***************************************************************************************************
+**********************************      MONGOD      **********************************************
+***************************************************************************************************
+***************************************************************************************************
+
+connection sans mongoose :
+1- partir mongod.
+pas besoin de creer la db avant et sans schema ca n apparait pas dnas compass=> ca viendra.
+
+const MongoClient = require('mongodb').MongoClient;
+MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
+  if(err){
+    return console.log('y a une erreur');  //va bloquer l execution avec le return
+  }
+  console.log('Connecté a mongoDB');
+
+  db.close();
+});
 
 
+pour la voir apparaitre dans compass, il faut ajouter du data :
+
+AVEC DB.COLLECTION('NOMDELACOLLECTION').INSERTONE(ARG1: LE DATA EN OBJ, ARG2 UN CB POUR ERR, ET VOIR LE RESULTAT. );
+
+
+MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
+  if(err){
+    return console.log('y a une erreur');  //va bloquer l execution avec le return
+  }
+  console.log('Connecté a mongoDB');
+  //Ajouter une collection - du data
+  db.collection('Todos').insertOne({
+     test: 'un truc intelligent',
+     completed: false
+  }, (err, result) => {
+    if(err){
+      return console.log('y a une erreur', err);  //va bloquer l execution avec le return
+    }
+    console.log(JSON.stringify(result.ops));
+  });
+
+  db.close();
+});
+
+donne  :
+
+Connecté a mongoDB
+[{"test":"un truc intelligent","completed":false,"_id":"598c9c91850703795697458d"}]
+
+
+
+
+
+
+Connecté a mongoDB
+[{"name":"AXE-Z","age":2,"location":{"lat":45,"lng":-73},"_id":"598ca9acc79d8579be8766a3"}]
+
+
+
+RESULT.OPS[0]  :
+
+MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
+  if(err){
+    return console.log('y a une erreur');  //va bloquer l execution avec le return
+  }
+  console.log('Connecté a mongoDB');
+  db.collection('Users').insertOne({
+     name: 'AXE-Z',
+     age: 2,
+     location: 'Mtl'
+  }, (err, result) => {
+    if(err){
+      return console.log('y a une erreur', err);  //va bloquer l execution avec le return
+    }
+    console.log(JSON.stringify(result.ops, undefined, 2));  //ca donne un meilleur preview .
+    console.log(result.ops[0]._id.getTimestamp()) //2017-08-10T23:56:44.000Z
+  });
+  db.close();
+});
+
+
+/*
+[
+  {
+    "name": "AXE-Z",
+    "age": 2,
+    "location": "Mtl",
+    "_id": "598cf2bcd67f5d7afcb8fe0b"
+  }
+]
+*/
+
+
+
+ObjectID()
+si on veut le gerer soit meme , mais mongo le fait tout seul, donc fuck it
+//const MongoClient = require('mongodb').MongoClient;
+const { MongoClient, ObjectID } = require('mongodb');  //meme chose  qu en haut.
+let obj = new ObjectID();
+console.log(obj)//598dc61663c1807e419795d7  //PAREIL
+console.log(obj)//598dc61663c1807e419795d7  //PAREIL
+console.log(new ObjectID())  //598dc65a04c83f7e5a6e98a5  DIF
+console.log(new ObjectID())  //598dc65a04c83f7e5a6e98a6  DIF
+
+
+
+///////////////////////FIND////////////////////////////////////////TOARRAY() native
+
+
+
+db.collection('Todos').find().
+TOARRAY() methode qui retourne une promise
+
+
+MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
+  if(err){
+    return console.log('y a une erreur');  //va bloquer l execution avec le return
+  }
+  console.log('Connecté a mongoDB');
+//TOUT
+  db.collection('Todos').find().toArray()  //va nous retourner un promise avec TOUT
+  .then(data => {
+    console.log(data) //js normal
+    console.log(JSON.stringify(data, undefined,2)); // du json
+  })
+  .catch(err => {
+    console.log(err)
+  });
+
+  //db.close();
+});
+
+
+
+ CRITERES
+
+//avec critere de false a completed // retourne que ce qui est false
+  db.collection('Todos').find({completed: false}).toArray()  //va nous retourner un promise avec compelted false
+  .then(data => {
+  ....
+
+
+
+
+  //AVEC CRITERE _id  //   faut passer par new ObjectID
+    db.collection('Todos').find({
+      _id: new ObjectID('598c9c91850703795697458d')}).toArray()  //va nous retourner un promise avec _id
+    .then(data => {
+
+//
+
+//////////////////find//////////////////////////////////////count native
+
+
+
+db.collection('Todos').find().count()  //va nous retourner un promise avec TOUT
+.then(data => {
+  console.log(data) //js normal
+  console.log(JSON.stringify(data, undefined,2)); // du json
+})
+.catch(err => {
+  console.log(err)
+});
+
+
+2 et 2 va compter les
+
+
+
+
+//////////////////delete//////////////////////////////////////native
+
+
+
+
+const { MongoClient, ObjectID } = require('mongodb');  //meme chose  qu en haut.
+
+
+MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
+  if(err){
+    return console.log('y a une erreur');  //va bloquer l execution avec le return
+  }
+  console.log('Connecté a mongoDB');
+
+    //deletemany   delete tout ce qui est dans le query
+    db.collection('Todos').deleteMany({text: 'cour'});
+   .then(result => {
+     console.log(result)
+   });
+
+    //deleteOne   delete le premier trouve qui est dans le query
+    db.collection('Todos').deleteOne({text: 'cour'});
+   .then(result => {
+     console.log(result)
+   });
+
+
+   //findOneAndDelete fait le boulot et retourne l object detruit.
+   db.collection('Todos').findOneAndDelete({completed: false})
+  .then(result => {
+    console.log(result)  //{ lastErrorObject: { n: 0 }, value: null, ok: 1 }
+  });
+
+  retour:
+ //  { lastErrorObject: { n: 1 },
+ // value:
+ //  { _id: 598f25003d88bf0864a87f66,
+ //    text: 'caca2',
+ //    completed: false },
+ // ok: 1 }
+
+  //db.close();
+});
+
+//////////////////UPDATE//////////////////////////////////////native
+update est plus demandant cote code
+
+ findOneAndUpdate (filter(obj), update(obj), options(obj), callback)
+update === updateOperator $set , $inc , $rename $unset
+
+MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
+  if(err){
+    return console.log('y a une erreur');  //va bloquer l execution avec le return
+  }
+  console.log('Connecté a mongoDB');
+
+  //update est plus demandant cote code
+  //598dd092fe01ae7db30f3f53
+  ///findOneAndUpdate (filter(obj), update(obj), options(obj), callback)
+  // update === updateOperator $set , $inc , $rename $unset
+  db.collection('Todos').findOneAndUpdate(
+/*filter*/  {_id: new ObjectID('598dd092fe01ae7db30f3f53')},
+/*update*/  { $set : {completed: false} },   //dans un obj, dire la sorte d update, et mettre ce qu on veut .
+/*option*/  {returnOriginal: false },  //par defaut ce qui est retourné est la fiche AVANT la modif, false = new
+/*callback*/
+  )
+  .then(result => {
+    console.log(result)
+  })
+  .catch(err => {
+    console.log(err)
+  });
+});
+
+//retour ===
+/*{ lastErrorObject: { updatedExisting: true, n: 1 },
+  value:
+   { _id: 598dd092fe01ae7db30f3f53,
+     text: 'walk le chien',
+     completed: false },
+  ok: 1 }*/
+
+
+
+
+
+
+
+
+
+***************************************************************************************************
+**********************************      MONGOD      **********************************************
+***************************************************************************************************
+***************************************************************************************************
+notes extra d un autre cour the complete dev, guide to mongoDB :
 ////IMPORTEZ MONGOOSE. CONNECTION PACKAGE QUI CONNECTE AVEC MONGODB////////////////////////////////////////////
 //test_helper.js
 
@@ -9,34 +271,29 @@ const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise; //ES6 faut dire quel type de promise.
 
-const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de mettre le port de defaut
-  useMongoClient: true,
-})
-.then(con => {
-  console.log('connection reussi...')
-})
-.catch(err => {
-  console.log(err)
-});
-///////////////////////////////////////////////////////////////////////////////////////////////
-///                        ////////    comment fonctione mongoose :                                              ////
-///////////////////////////////////////////////////////////////////////////////////////////////
-important!!!!!!
-POUR TESTER LE COUR A MIS EN PLACE UN DROP POUR PAS CROWDER LA DB POUR RIEN ,
-MONGOOSE FONCTIONNE AVEC UN MODELE CONSTRUCTEUR, ON FAIT UN SCHEMA, TSE STRING NUMBER BOOL=>
-
-ENSUITE ON FAIT UN MODEL POUR CETTE SCHEMA,
-ON ASSOSIE LE SCHEMA AU MODEL ET ON EXPORTE SI AILLEUR LE MODEL=>
-
-POUR UTILISER MONGOOSE ENSUITE, IL S AGIT DE FAIRE NEW NOMDUMODEL . ET AVEC CA ON TRAVAILLE.
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-///                        ////////    comment fonctione mongoose :                                              ////
-///////////////////////////////////////////////////////////////////////////////////////////////
 //DONE FUNCTION
 DONE = C EST POUR LE TESTING, PUISQUE LES TEST SONT ASYNC , IL FAUT DIRE A MOCHA D ATTENDRE, QUE LA REPONSE
 VA P-E PRENDRE DU TEMPS. DONC AVEC DONE, ON LUI DIT DE RESTER, ET DONE() LUI DIT DE CONTINUER.
 
+
+//DEPRECATION, CA FONCTIONNE ,MAIS FAUT CHANGER CA !!!
+//va voir localement // pas besoin que users_test soit la d avance, mongoosse et mogodb vont la creer si pas la.
+//pour s assurer que mongo connecte avant mocha: BEFORE.
+before(done => {
+  mongoose.connect("mongodb://localhost/users_test");
+  mongoose.connection
+    .once("open", () => {
+      done();
+    }) //once, ne fait qu une fois.
+    .on("error", error => {
+      console.warn("Avertissement", error);
+    });
+});
+
+
+//open et error sont des event que mongoose reconnait. Et peu importe le temps de connection, ils seront ok.
+//DEPRECATION, CA FONCTIONNE ,MAIS FAUT CHANGER CA !!! fonctionne bien avec mongose@4.6.6
+////Importez mongoose. package de CONNECTION avec mongoDB////////////////////////////////////////////
 
 ///pour ne pas poluer la db
 //done est un truc qui check si c est fait avant d ajouter le user joe. BEFOREEACH
@@ -1291,165 +1548,3 @@ lui est a 91.655km
 ////////////////////////////traiter la localisation avec mongoose //////////////////////////////////////
 ////////////////////////////traiter la localisation avec mongoose //////////////////////////////////////
 ////////////////////////////traiter la localisation avec mongoose //////////////////////////////////////
-
-
-
-
-
-
-
-*************************************************************************************************************************************************************MONGOOSE************************************************************ ****************************************************************************************************************
-
-
-const mongoose = require('mongoose');
-
-mongoose.Promise = global.Promise; //ES6 faut dire quel type de promise.
-
-const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de mettre le port de defaut
-  useMongoClient: true,
-})
-.then(con => {
-  console.log('connection reussi...')
-})
-.catch(err => {
-  console.log(err)
-});
-
-
- const Todo = mongoose.model('Todo', {
-   text: {
-     type: String
-   },
-   completed: {
-     type: Boolean
-   },
-   completedAt: {
-     type: Number
-   }
- });
-
-
- //.save() retourne une promesse
- newTodo.save()
- .then(data => {
-  console.log(data)
- })
- .catch(err => {
-   console.log(err)
- });
-
-
-
- ///////////////////////////////////////////////////////////////////////////////////////////////
- ///                        ////////    comment fonctione mongoose :                                              ////
- ///////////////////////////////////////////////////////////////////////////////////////////////
- important!!!!!!
- POUR TESTER LE COUR A MIS EN PLACE UN DROP POUR PAS CROWDER LA DB POUR RIEN ,
- MONGOOSE FONCTIONNE AVEC UN MODELE CONSTRUCTEUR, ON FAIT UN SCHEMA, TSE STRING NUMBER BOOL=>
-
- ENSUITE ON FAIT UN MODEL POUR CETTE SCHEMA,
- ON ASSOSIE LE SCHEMA AU MODEL ET ON EXPORTE SI AILLEUR LE MODEL=>
-
-il est possible aussi de juste faire un model et tout mettre dedans, en skipant la schema.
-
- POUR UTILISER MONGOOSE ENSUITE, IL S AGIT DE FAIRE NEW NOMDUMODEL . ET AVEC CA ON TRAVAILLE.
-
- ///////////////////////////////////////////////////////////////////////////////////////////////
- ///                        ////////    comment fonctione mongoose :                                              ////
- ///////////////////////////////////////////////////////////////////////////////////////////////
-
-
-model sans schema :
-
-const Todo = mongoose.model('Todo', {
-  text: {
-    type: String,
-    required: true,
-    minlenght: 3
-  },
-  completed: {
-    type: Boolean
-  },
-  completedAt: {
-    type: Number
-  }
-});
-
-ensuite ....
-let newTodo = new Todo({
-  text: 'Marcher avec mongoose4',
-  completed: false,
-  completedAt: Date.now()
-})
-.save()
-.then ....
-
-
-
-MEME CHOSE EN FONCTION =
-const createUser = (emailAd, nom) =>  {
- return new User({
-   email: emailAd,
-   name: nom
- }).save()
- .then(data => {
-  console.log(data)
- })
- .catch(err => {
-   console.log(err)
- });
-}
-
-createUser('ben@axe-z.com', 'Benoit2');
-
-
-////////////////////postman test de l api.
-const express = require('express');
-const bodyParser = require('body-parser');
-
-//importe le serveur mogoose qui connect a 27107 et nos 2 models sans schema.
-const { mongoose, db } = require('./db/mongoose');
-const { Todo } = require('./models/todo');
-const { User, createUser } = require('./models/user');
-
-const port = process.env.PORT || 3000;
-//partir express
-const app = express();
-
-//middleware body parser
-SANS BODYPARSER ON NE POURRA PAS LIRE REQ.BODY CORRECTEMENT. DONC ON DOIT L UTILISER.
-app.use(bodyParser.json());
-
-DANS POSTMAN POUR TESTER L API. HTTP://LOCALHOST:3000/TODOS FAIRE UN POST, et dans le body mettre json:
-{
-	"text":"reponse viendra dans la console"
-}
-app.post('/todos', (req,res) => {
-  console.log(req.body);        //{ text: 'reponse viendra dans la console' } revient das le terminal
-});
-
-app.listen(port, () => {
-  console.log(`ca roule sur ${port}`);
-});
-
-
-
-
-utiliser donc ceci et faire des post a vec postman :
-
-app.post("/todos", (req, res) => {
-	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
-	const todo = new Todo({
-		text: req.body.text,
-		completed: false,
-		completedAt: Date.now()
-	})
-		.save()
-		.then(data => {
-			console.log(data);
-			res.send(data);  //ce qui retourne dans postman dans la boite response
-		})
-    .catch(err => {
-      res.status(400).send(err);
-    });
-});
