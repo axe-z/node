@@ -46,6 +46,7 @@ beforeEach((done) => {
     //pret pour la suite
     done();
   });
+
 });
 
 
@@ -1402,13 +1403,13 @@ const createUser = (emailAd, nom) =>  {
 
 createUser('ben@axe-z.com', 'Benoit2');
 
-
+////////////////////////////////////POST AVEC POSTMAN (on a pas rien d autre en ce moemeny)
 ////////////////////postman test de l api.
 const express = require('express');
 const bodyParser = require('body-parser');
 
 //importe le serveur mogoose qui connect a 27107 et nos 2 models sans schema.
-const { mongoose, db } = require('./db/mongoose');
+const { mongoose, db } = require('./db/mongoose'); //pas besoin de DB vraiment
 const { Todo } = require('./models/todo');
 const { User, createUser } = require('./models/user');
 
@@ -1435,7 +1436,7 @@ app.listen(port, () => {
 
 
 
-utiliser donc ceci et faire des post a vec postman :
+utiliser donc ceci et faire des post avec postman :
 
 app.post("/todos", (req, res) => {
 	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
@@ -1452,4 +1453,95 @@ app.post("/todos", (req, res) => {
     .catch(err => {
       res.status(400).send(err);
     });
+});
+
+
+utiliser donc ceci et faire des post avec postman et envoyer sur un site ! :
+
+app.post("/todos", (req, res) => {
+	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
+	const todo = new Todo({
+		text: req.body.text,
+		completed: false,
+		completedAt: Date.now()
+	})
+		.save()
+		.then(data => {
+			 //console.log(data);  //dans le terminal.
+			 res.send(data)   //ce qui retourne dans postman dans la boite response
+
+       app.get('/' , (req, res) => { //a localhost:3000/
+       res.send(` <h1>Test mongoose:  ${data.text} </h1>` );  //Test mongoose: ceci vient d ailleurs (postman)
+      });
+
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
+});
+
+
+////////////des asti de test
+const expect = require('expect');
+const request = require('supertest');
+const mongoose = require('mongoose');
+
+const {app} = require('./../serveur');
+const { Todo } = require('./../models/todo');
+
+///tout deleter avant
+beforeEach((done) => {
+  Todo.remove({}).then(() => done());
+});
+
+
+describe("POST /todos", () => {
+
+	it("should create a new todo", done => {
+		let text = "test todo text";
+
+		request(app)
+			.post("/todos")
+			.send({ text: text })
+			.expect(200) //status
+			.expect(res => {
+				expect(res.body.text).toBe(text);  //la reponse qui revient
+			})
+			.end((err, res) => {
+				if (err) {
+					return done(err);
+				}
+        //ensuite on regarde dans la db si ca y est , find retourne tout ici
+				Todo.find().then(todos => {
+					expect(todos.length).toBe(1);
+					expect(todos[0].text).toBe(text);
+					done();
+				}).catch(err => {
+          return done(err);
+        });
+			});
+	});
+
+});
+
+
+
+
+///////////////////////////////////////////////////////////GET
+GET
+FIND RETOURNE TOUT SI ON NE MET PAS DE PARAM.
+
+///action se produit en allant sur http://localhost:3000/todos
+const { Todo } = require('./models/todo');
+
+
+app.get("/todos", (req, res) => {
+  Todo.find()
+  .then(data => {
+    res.send({data})  //on le met dans un boj, pour se donner des options, facile d ajouter a un obj.
+    console.log(data[0].text);  //test todo text
+  })
+  .catch(err => {
+    res.status(400).send(err);
+  });
 });

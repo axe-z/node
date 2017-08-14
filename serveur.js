@@ -17,7 +17,7 @@ const db = mongoose.connect('mongodb://localhost/TodoApp', {
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const { mongoose, db } = require('./db/mongoose');
+const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User, createUser } = require('./models/user');
 
@@ -50,13 +50,23 @@ app.post("/todos", (req, res) => {
 		});
 });
 
-
-//
-// app.get('/' , (req, res) => {
-//  res.send('<h1>Test mongoose - postman</h1>');  //Content-Type: text/html
-// });
+///action se produit en allant sur http://localhost:3000/todos
+app.get("/todos", (req, res) => {
+  Todo.find()
+  .then(data => {
+    res.send({data})  //on le met dans un boj, pour se donner des options, facile d ajouter a un obj.
+    console.log(data[0].text);  //test todo text
+  })
+  .catch(err => {
+    res.status(400).send(err);
+  });
+});
 
 
 app.listen(port, () => {
   console.log(`ca roule sur ${port}`);
 });
+
+
+
+module.exports = { app };
