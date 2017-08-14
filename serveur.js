@@ -1,23 +1,9 @@
-/*const mongoose = require('mongoose');
-
-mongoose.Promise = global.Promise; //ES6 faut dire quel type de promise.
-
-const db = mongoose.connect('mongodb://localhost/TodoApp', {
-  useMongoClient: true,
-})
-.then(con => {
-  console.log('connection reussi...')
-})
-.catch(err => {
-  console.log(err)
-});
-*/
-
+///////////////////////////////////////////////////////////REQUIRES
 
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const { mongoose } = require('./db/mongoose');
+const { mongoose, db } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User, createUser } = require('./models/user');
 
@@ -25,9 +11,15 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-//middl;eware body parser
+///////////////////////////////////////////////////////////REQUIRES
+
+///////////////////////////////////////////////////////////MIDDLEWARES
+
 app.use(bodyParser.json());
 
+///////////////////////////////////////////////////////////MIDDLEWARES
+
+///////////////////////////////////////////////////////////POST
 app.post("/todos", (req, res) => {
 	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
 	const todo = new Todo({
@@ -49,24 +41,32 @@ app.post("/todos", (req, res) => {
 			res.status(400).send(err);
 		});
 });
+///////////////////////////////////////////////////////////POST
+
+///////////////////////////////////////////////////////////GET
 
 ///action se produit en allant sur http://localhost:3000/todos
 app.get("/todos", (req, res) => {
   Todo.find()
   .then(data => {
     res.send({data})  //on le met dans un boj, pour se donner des options, facile d ajouter a un obj.
-    console.log(data[0].text);  //test todo text
+    //console.log(data[0].text);  //test todo text
   })
   .catch(err => {
     res.status(400).send(err);
   });
 });
 
+///////////////////////////////////////////////////////////GET
+
+
+
+///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {
   console.log(`ca roule sur ${port}`);
 });
 
-
+///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 module.exports = { app };

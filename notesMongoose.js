@@ -1316,6 +1316,9 @@ const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de me
   console.log(err)
 });
 
+IMPORTANT!!
+QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
+
 
  const Todo = mongoose.model('Todo', {
    text: {
@@ -1545,3 +1548,122 @@ app.get("/todos", (req, res) => {
     res.status(400).send(err);
   });
 });
+
+
+//TEST DE GET
+////POUR TEST DE GET, ON VEUT GARDER CA CLEAN DONC ON VA METTRE DU STOCK PAR DEFAUT
+const todos = [
+{
+  text: 'premier test',
+  completed: false
+},
+{
+ text: 'deuxieme test',
+ completed: false
+},
+];
+
+beforeEach((done) => {
+  Todo.remove({}).then(() => {              //efface tout
+    return Todo.insertMany(todos);          //insert le todos et retourne une promise.
+  }).then(() => done());
+});
+
+
+it("test de GET", done => {
+	request(app)
+		.get("/todos")
+		.expect(200)
+		.expect(res => {
+      console.log(res.body.todos.length);
+			expect(res.body.todos.length).toBe(2);
+		})
+		.end(done());
+});
+
+
+
+
+
+///////////////////////////////////QUERIES
+
+
+const { mongoose, db } = require('./db/mongoose');
+
+//const {app} = require('./../serveur');
+const { Todo } = require('./models/todo');
+
+const id = '599100ab170cdc199ba831c8';
+
+LE TRUC IMPORTANT DE COMPRENDRE ICI EST QUE MEM SI ON A PAS LE BON ID, PAR EXEMPLE, MONGOOSE NE RETOURENRA PAS UNE ERREUR MAIS NULL, DONC LA PROMISE VA ETRE RESOLVER A NULL, DONC IL FAUT METTRE UN if(!data) , SI ON VEUT TRAITER LE TROUBLE, LE CATCH NE SERA JAMAIS APPELÉ=> CECI DIT MIEUX VAUT LE METTRE , IL AURA UNE ERREUR SI JAMAIS LE ID N A ACUN CRISIT DE BON SENS , GENRE 'LAPIN', IL NE SERA PAS VALID, ET CREERA UN PROBLEME. 
+
+////find, , retourne un array de doc,
+Todo.find({
+  completed: false           //pas besoin de new ObjectId
+})
+.limit(3)
+.then(todos => {
+ console.log(todos)
+})
+
+
+//findOne   ici retourne qu une seul truc, obj, pas d array
+Todo.findOne({
+  _id: id
+})
+.then(todo => {
+  if(!todo){
+    console.log('rien de retouné')
+  }
+ console.log(todo)
+});
+
+
+///best pour un id.
+Todo.findById(id)
+.then(todo => {
+  if(!todo){
+    console.log('rien de retouné')
+  }
+ console.log(todo)
+});
+
+
+
+voir les docs
+http://mongoosejs.com/docs/queries.html
+ET
+https://docs.mongodb.com/manual/tutorial/query-documents/
+
+EXEMPLE :
+Person.
+  find({
+    occupation: /host/,
+    'name.last': 'Ghost',
+    age: { $gt: 17, $lt: 66 },
+    likes: { $in: ['vaporizing', 'talking'] }
+  }).
+  limit(10).
+  sort({ occupation: -1 }).
+  select({ name: 1, occupation: 1 }).
+  exec(callback);
+
+
+  IMPORTANT!!
+  QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
+
+///AVEC USER
+  const { User } = require('./models/user');
+  const idUser = '598fa32586a4460dd493cf64';
+
+   if(ObjectID.isValid(idUser)){
+     console.log('oui User!!!')
+
+     User.findById(idUser)
+     .then(user => {
+       if(!user){
+         console.log('rien de retouné')
+       }
+      console.log(user)
+     });
+   }

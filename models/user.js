@@ -41,4 +41,4 @@ const createUser = (emailAd, nom) =>  {
 //   console.log(err)
 // });
 
-module.exports = {User, createUser}
+module.exports = { User, createUser}
