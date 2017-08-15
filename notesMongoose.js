@@ -1595,7 +1595,7 @@ const { Todo } = require('./models/todo');
 
 const id = '599100ab170cdc199ba831c8';
 
-LE TRUC IMPORTANT DE COMPRENDRE ICI EST QUE MEM SI ON A PAS LE BON ID, PAR EXEMPLE, MONGOOSE NE RETOURENRA PAS UNE ERREUR MAIS NULL, DONC LA PROMISE VA ETRE RESOLVER A NULL, DONC IL FAUT METTRE UN if(!data) , SI ON VEUT TRAITER LE TROUBLE, LE CATCH NE SERA JAMAIS APPELÉ=> CECI DIT MIEUX VAUT LE METTRE , IL AURA UNE ERREUR SI JAMAIS LE ID N A ACUN CRISIT DE BON SENS , GENRE 'LAPIN', IL NE SERA PAS VALID, ET CREERA UN PROBLEME. 
+LE TRUC IMPORTANT DE COMPRENDRE ICI EST QUE MEM SI ON A PAS LE BON ID, PAR EXEMPLE, MONGOOSE NE RETOURENRA PAS UNE ERREUR MAIS NULL, DONC LA PROMISE VA ETRE RESOLVER A NULL, DONC IL FAUT METTRE UN if(!data) , SI ON VEUT TRAITER LE TROUBLE, LE CATCH NE SERA JAMAIS APPELÉ=> CECI DIT MIEUX VAUT LE METTRE , IL AURA UNE ERREUR SI JAMAIS LE ID N A ACUN CRISIT DE BON SENS , GENRE 'LAPIN', IL NE SERA PAS VALID, ET CREERA UN PROBLEME.
 
 ////find, , retourne un array de doc,
 Todo.find({
@@ -1667,3 +1667,49 @@ Person.
       console.log(user)
      });
    }
+
+
+
+
+
+
+   ////////////////////GET req.params.id et mongoDB
+
+
+   app.get("/todos/:id", (req, res) => {
+    res.send(req.params)    ///http://localhost:3000/todos/1562   ==== {"id":"1562"}
+   });
+
+
+
+   const {ObjectID} = require('mongodb'); //mongoNative
+
+   ////http://localhost:3000/todos/599100ab170cdc199ba831c8
+
+   app.get("/todos/:id", (req, res) => {
+   	const id = req.params.id;
+
+   	if (!ObjectID.isValid(id)) {
+   		return res.status(404).send();
+   	}
+     //il met pas de else
+
+   		Todo.findById(id)
+   			.then(todo => {
+   				if (!todo) {
+   					res.status(404).send("<h1>oups</h1>");
+   				}
+   				res.send(`<h1>Bravo: ${todo.text}, id: ${todo.id}</h1>`);
+           //res.send({todo})
+   				//console.log(todo);
+   			})
+   			.catch(e => {
+   				res.status(400).send();
+   				 //console.log(e); ca donne un message d err. de typeError
+   			});
+
+   });
+
+
+
+   ////////////////////GET req.params.id

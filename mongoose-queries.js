@@ -59,8 +59,13 @@ const idUser = '598fa32586a4460dd493cf64';
     console.log(user)
    });
  }
-/* { _id: 598fa32586a4460dd493cf64,
+
+
+ 
+/*
+{ _id: 598fa32586a4460dd493cf64,
    email: 'benoit@axe-z.com',
    name: 'Axe-Z',
    __v: 0
- } */
+ }
+  */
