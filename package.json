@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node serveur.js",
     "app": "nodemon app.js",
     "server": "nodemon server.js -e js,hbs",
     "test": "mocha **/*.test.js",
@@ -12,6 +12,9 @@
     "test2watch": "nodemon --exec  \"npm test\"",
     "moc": "nodemon --exec  \"npm test\"",
     "appmongo": "nodemon serveur.js"
+  },
+  "engines": {
+    "node": "8.1.3"
   },
   "author": "",
   "license": "ISC",

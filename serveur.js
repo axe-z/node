@@ -10,7 +10,7 @@ const { User, createUser } = require('./models/user');
 const port = process.env.PORT || 3000;
 
 const app = express();
-
+//https://sleepy-hamlet-49567.herokuapp.com/
 ///////////////////////////////////////////////////////////REQUIRES
 
 ///////////////////////////////////////////////////////////MIDDLEWARES
@@ -62,34 +62,8 @@ app.get("/todos", (req, res) => {
 ////////////////////GET req.params.id
 const {ObjectID} = require('mongodb'); //mongoNative
 
-/*
-app.get("/todos/:id", (req, res) => {
-	const id = req.params.id;
-	//res.send(req.params); /// http://localhost:3000/todos/599100ab170cdc199ba831c8   ==== trouvé dans mongo
-	if (ObjectID.isValid(id)) {
-		//console.log("oui User!!!");
-		Todo.findById(id)
-			.then(todo => {
-				if (!todo) {
-        res.status(404).send("<h1>oups</h1>");
-					//res.status(404).send();
-				}
-        res.send(`<h1>Bravo: ${todo.text}, id: ${todo.id}</h1>`)
-				//console.log(todo);
-			})
-			.catch(e => {
-        console.log(e)
-				res.status(400).send("<h1>oups</h1>");
-				 console.log(e);
-			});
-	} else {
-		console.log("rien de retouné");
-		res.status(404).send("<h1>oups</h1>");
-	}
-});
-*/
 ////http://localhost:3000/todos/599100ab170cdc199ba831c8
-
+//routes
 app.get("/todos/:id", (req, res) => {
 	const id = req.params.id;
 
@@ -97,13 +71,12 @@ app.get("/todos/:id", (req, res) => {
 		return res.status(404).send();
 	}
   //il met pas de else
-
 		Todo.findById(id)
 			.then(todo => {
 				if (!todo) {
-					res.status(404).send("<h1>oups</h1>");
+					res.status(404).send();
 				}
-				res.send(`<h4>Bravo: ${todo.text}, id: ${todo.id}</h4>`);
+				res.send({todo});
         //res.send({todo})
 				//console.log(todo);
 			})

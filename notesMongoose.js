@@ -1685,7 +1685,7 @@ Person.
    const {ObjectID} = require('mongodb'); //mongoNative
 
    ////http://localhost:3000/todos/599100ab170cdc199ba831c8
-
+//routes
    app.get("/todos/:id", (req, res) => {
    	const id = req.params.id;
 
@@ -1713,3 +1713,66 @@ Person.
 
 
    ////////////////////GET req.params.id
+
+//////////////////////////////////////////MLABS/////ET HEROKU////////////////////////
+  "scripts": {
+   "start": "node serveur.js",
+ },
+ "engines": {
+   "node": ""
+ },
+///HEROKU VA ROULER DE MLABS.
+
+pour ajouter mlabs
+heroku addons:create mongolab:sandbox
+
+/////////////////////////////////POUR CONNECTION:
+MLABS DONC TERMINAL MONGOD A PAS BESOIN DE ROULER ICI :
+DANS LE FICHIER DE CONNECTION
+
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+
+const db = mongoose.connect('mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp', {
+useMongoClient: true,
+})
+.then(con => {
+console.log('connection reussi...')
+})
+.catch(err => {
+console.log(err)
+});
+
+
+/////////////////////////////////    LE SERVEUR A CES ROUTES,
+app.post("/todos", (req, res) => {
+	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
+	const todo = new Todo({
+		text: req.body.text,
+		completed: false,
+		completedAt: Date.now()
+	})
+		.save()
+		.then(data => {
+			 res.send(data)   //ce qui retourne dans postman dans la boite response
+       app.get('/' , (req, res) => { //a localhost:3000/
+       res.send(` <h1>Test mongoose - postman ${data.text} </h1>` );  //Content-Type: text/html
+      });
+
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
+});
+
+///DANS POSTMAN
+POST http://localhost:3000/todos
+{
+	"text":"ceci vient dmlabs3",
+	"completed": false
+}
+
+
+
+///DANS COMPASS
+COMME D HAB=>
