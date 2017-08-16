@@ -1,4 +1,712 @@
-PART II ligne 1295
+PART II ligne 800 GENRE...
+
+
+
+*************************************************************************************************************************************************************MONGOOSE************************************************************ ****************************************************************************************************************
+
+
+const mongoose = require('mongoose');
+
+mongoose.Promise = global.Promise; //ES6 faut dire quel type de promise.
+
+const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de mettre le port de defaut
+  useMongoClient: true,
+})
+.then(con => {
+  console.log('connection reussi...')
+})
+.catch(err => {
+  console.log(err)
+});
+
+IMPORTANT!!
+QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
+
+
+ const Todo = mongoose.model('Todo', {
+   text: {
+     type: String
+   },
+   completed: {
+     type: Boolean
+   },
+   completedAt: {
+     type: Number
+   }
+ });
+
+
+ //.save() retourne une promesse
+ newTodo.save()
+ .then(data => {
+  console.log(data)
+ })
+ .catch(err => {
+   console.log(err)
+ });
+
+
+
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ ///                        ////////    comment fonctione mongoose :                                              ////
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ important!!!!!!
+ POUR TESTER LE COUR A MIS EN PLACE UN DROP POUR PAS CROWDER LA DB POUR RIEN ,
+ MONGOOSE FONCTIONNE AVEC UN MODELE CONSTRUCTEUR, ON FAIT UN SCHEMA, TSE STRING NUMBER BOOL=>
+
+ ENSUITE ON FAIT UN MODEL POUR CETTE SCHEMA,
+ ON ASSOSIE LE SCHEMA AU MODEL ET ON EXPORTE SI AILLEUR LE MODEL=>
+
+il est possible aussi de juste faire un model et tout mettre dedans, en skipant la schema.
+
+ POUR UTILISER MONGOOSE ENSUITE, IL S AGIT DE FAIRE NEW NOMDUMODEL . ET AVEC CA ON TRAVAILLE.
+
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+ ///                        ////////    comment fonctione mongoose :                                              ////
+ ///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+model sans schema :
+
+const Todo = mongoose.model('Todo', {
+  text: {
+    type: String,
+    required: true,
+    minlenght: 3
+  },
+  completed: {
+    type: Boolean
+  },
+  completedAt: {
+    type: Number
+  }
+});
+
+ensuite ....
+let newTodo = new Todo({
+  text: 'Marcher avec mongoose4',
+  completed: false,
+  completedAt: Date.now()
+})
+.save()
+.then ....
+
+
+
+MEME CHOSE EN FONCTION =
+const createUser = (emailAd, nom) =>  {
+ return new User({
+   email: emailAd,
+   name: nom
+ }).save()
+ .then(data => {
+  console.log(data)
+ })
+ .catch(err => {
+   console.log(err)
+ });
+}
+
+createUser('ben@axe-z.com', 'Benoit2');
+
+////////////////////////////////////POST AVEC POSTMAN (on a pas rien d autre en ce moemeny)
+////////////////////postman test de l api.
+const express = require('express');
+const bodyParser = require('body-parser');
+
+//importe le serveur mogoose qui connect a 27107 et nos 2 models sans schema.
+const { mongoose, db } = require('./db/mongoose'); //pas besoin de DB vraiment
+const { Todo } = require('./models/todo');
+const { User, createUser } = require('./models/user');
+
+const port = process.env.PORT || 3000;
+//partir express
+const app = express();
+
+//middleware body parser
+SANS BODYPARSER ON NE POURRA PAS LIRE REQ.BODY CORRECTEMENT. DONC ON DOIT L UTILISER.
+app.use(bodyParser.json());
+
+DANS POSTMAN POUR TESTER L API. HTTP://LOCALHOST:3000/TODOS FAIRE UN POST, et dans le body mettre json:
+{
+	"text":"reponse viendra dans la console"
+}
+app.post('/todos', (req,res) => {
+  console.log(req.body);        //{ text: 'reponse viendra dans la console' } revient das le terminal
+});
+
+app.listen(port, () => {
+  console.log(`ca roule sur ${port}`);
+});
+
+
+
+
+utiliser donc ceci et faire des post avec postman :
+
+app.post("/todos", (req, res) => {
+	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
+	const todo = new Todo({
+		text: req.body.text,
+		completed: false,
+		completedAt: Date.now()
+	})
+		.save()
+		.then(data => {
+			console.log(data);
+			res.send(data);  //ce qui retourne dans postman dans la boite response
+		})
+    .catch(err => {
+      res.status(400).send(err);
+    });
+});
+
+
+utiliser donc ceci et faire des post avec postman et envoyer sur un site ! :
+
+app.post("/todos", (req, res) => {
+	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
+	const todo = new Todo({
+		text: req.body.text,
+		completed: false,
+		completedAt: Date.now()
+	})
+		.save()
+		.then(data => {
+			 //console.log(data);  //dans le terminal.
+			 res.send(data)   //ce qui retourne dans postman dans la boite response
+
+       app.get('/' , (req, res) => { //a localhost:3000/
+       res.send(` <h1>Test mongoose:  ${data.text} </h1>` );  //Test mongoose: ceci vient d ailleurs (postman)
+      });
+
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
+});
+
+
+////////////des asti de test
+const expect = require('expect');
+const request = require('supertest');
+const mongoose = require('mongoose');
+
+const {app} = require('./../serveur');
+const { Todo } = require('./../models/todo');
+
+///tout deleter avant
+beforeEach((done) => {
+  Todo.remove({}).then(() => done());
+});
+
+
+describe("POST /todos", () => {
+
+	it("should create a new todo", done => {
+		let text = "test todo text";
+
+		request(app)
+			.post("/todos")
+			.send({ text: text })
+			.expect(200) //status
+			.expect(res => {
+				expect(res.body.text).toBe(text);  //la reponse qui revient
+			})
+			.end((err, res) => {
+				if (err) {
+					return done(err);
+				}
+        //ensuite on regarde dans la db si ca y est , find retourne tout ici
+				Todo.find().then(todos => {
+					expect(todos.length).toBe(1);
+					expect(todos[0].text).toBe(text);
+					done();
+				}).catch(err => {
+          return done(err);
+        });
+			});
+	});
+
+});
+
+
+
+
+///////////////////////////////////////////////////////////GET
+GET
+FIND RETOURNE TOUT SI ON NE MET PAS DE PARAM.
+
+///action se produit en allant sur http://localhost:3000/todos
+const { Todo } = require('./models/todo');
+
+
+app.get("/todos", (req, res) => {
+  Todo.find()
+  .then(data => {
+    res.send({data})  //on le met dans un boj, pour se donner des options, facile d ajouter a un obj.
+    console.log(data[0].text);  //test todo text
+  })
+  .catch(err => {
+    res.status(400).send(err);
+  });
+});
+
+
+//TEST DE GET
+////POUR TEST DE GET, ON VEUT GARDER CA CLEAN DONC ON VA METTRE DU STOCK PAR DEFAUT
+const todos = [
+{
+  text: 'premier test',
+  completed: false
+},
+{
+ text: 'deuxieme test',
+ completed: false
+},
+];
+
+beforeEach((done) => {
+  Todo.remove({}).then(() => {              //efface tout
+    return Todo.insertMany(todos);          //insert le todos et retourne une promise.
+  }).then(() => done());
+});
+
+
+it("test de GET", done => {
+	request(app)
+		.get("/todos")
+		.expect(200)
+		.expect(res => {
+      console.log(res.body.todos.length);
+			expect(res.body.todos.length).toBe(2);
+		})
+		.end(done());
+});
+
+
+
+
+
+///////////////////////////////////QUERIES
+
+
+const { mongoose, db } = require('./db/mongoose');
+
+//const {app} = require('./../serveur');
+const { Todo } = require('./models/todo');
+
+const id = '599100ab170cdc199ba831c8';
+
+LE TRUC IMPORTANT DE COMPRENDRE ICI EST QUE MEM SI ON A PAS LE BON ID, PAR EXEMPLE, MONGOOSE NE RETOURENRA PAS UNE ERREUR MAIS NULL, DONC LA PROMISE VA ETRE RESOLVER A NULL, DONC IL FAUT METTRE UN if(!data) , SI ON VEUT TRAITER LE TROUBLE, LE CATCH NE SERA JAMAIS APPELÉ=> CECI DIT MIEUX VAUT LE METTRE , IL AURA UNE ERREUR SI JAMAIS LE ID N A ACUN CRISIT DE BON SENS , GENRE 'LAPIN', IL NE SERA PAS VALID, ET CREERA UN PROBLEME.
+
+////find, , retourne un array de doc,
+Todo.find({
+  completed: false           //pas besoin de new ObjectId
+})
+.limit(3)
+.then(todos => {
+ console.log(todos)
+})
+
+
+//findOne   ici retourne qu une seul truc, obj, pas d array
+Todo.findOne({
+  _id: id
+})
+.then(todo => {
+  if(!todo){
+    console.log('rien de retouné')
+  }
+ console.log(todo)
+});
+
+
+///best pour un id.
+Todo.findById(id)
+.then(todo => {
+  if(!todo){
+    console.log('rien de retouné')
+  }
+ console.log(todo)
+});
+
+
+
+voir les docs
+http://mongoosejs.com/docs/queries.html
+ET
+https://docs.mongodb.com/manual/tutorial/query-documents/
+
+EXEMPLE :
+Person.
+  find({
+    occupation: /host/,
+    'name.last': 'Ghost',
+    age: { $gt: 17, $lt: 66 },
+    likes: { $in: ['vaporizing', 'talking'] }
+  }).
+  limit(10).
+  sort({ occupation: -1 }).
+  select({ name: 1, occupation: 1 }).
+  exec(callback);
+
+
+  IMPORTANT!!
+  QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
+
+///AVEC USER
+  const { User } = require('./models/user');
+  const idUser = '598fa32586a4460dd493cf64';
+
+   if(ObjectID.isValid(idUser)){
+     console.log('oui User!!!')
+
+     User.findById(idUser)
+     .then(user => {
+       if(!user){
+         console.log('rien de retouné')
+       }
+      console.log(user)
+     });
+   }
+
+
+
+
+
+
+   ////////////////////GET req.params.id et mongoDB
+
+
+   app.get("/todos/:id", (req, res) => {
+    res.send(req.params)    ///http://localhost:3000/todos/1562   ==== {"id":"1562"}
+   });
+
+
+
+   const {ObjectID} = require('mongodb'); //mongoNative
+
+   ////http://localhost:3000/todos/599100ab170cdc199ba831c8
+//routes
+   app.get("/todos/:id", (req, res) => {
+   	const id = req.params.id;
+
+   	if (!ObjectID.isValid(id)) {
+   		return res.status(404).send();
+   	}
+     //il met pas de else
+
+   		Todo.findById(id)
+   			.then(todo => {
+   				if (!todo) {
+   					res.status(404).send("<h1>oups</h1>");
+   				}
+   				res.send(`<h1>Bravo: ${todo.text}, id: ${todo.id}</h1>`);
+           //res.send({todo})
+   				//console.log(todo);
+   			})
+   			.catch(e => {
+   				res.status(400).send();
+   				 //console.log(e); ca donne un message d err. de typeError
+   			});
+
+   });
+
+
+
+   ////////////////////GET req.params.id
+
+
+********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************  le grand moment, connecter heroku a mlabs, et faire de la db a distance.  ***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+
+
+//////////////////////////////////////////MLABS/////ET HEROKU////////////////////////
+DANS SON COUR IL CONFIGURE MLABS A PARTIR D HEROKU, MAIS CE N EST PLUS POSSIBLE, IL FAUT METTRE NOTRE CARTE DE CREDIT, MEME SI GRATUIT. PAS VRAIMENT DE BESOIN, SI ON A NOTRE MLABS D ACTIF, IL S AGIT JUSTE DE METTRE LE LIEN DANS LA CONFIG, C EST TOUT=>
+
+MAIS DANS LE PACKAGE, ON DOIT DANS LE SCRIPT START DIRE A HEROKU QUOI FAIRE
+
+ET QUEL ENGINE UTILISER :
+
+  "scripts": {
+   "start": "node serveur.js",
+ },
+ "engines": {
+   "node": "8.1.3"   //notre version
+ },
+
+///HEROKU VA ROULER DE MLABS.
+
+POUR AJOUTER MLABS DANS NOTRE SERVEUR..
+ON DOIT ALLER SUR MLABS ET CREER NOTRE TODOAPP , ET CREER UN USER : axe-z et mp 0123456
+
+il va nous donner le link:
+'mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp'
+heroku addons:create mongolab:sandbox ne fonctionne pas sans carte de credit.
+
+/////////////////////////////////POUR CONNECTION:
+MLABS DONC TERMINAL MONGOD A PAS BESOIN DE ROULER ICI :
+DANS LE FICHIER DE CONNECTION
+
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
+
+const db = mongoose.connect('mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp', {
+useMongoClient: true,
+})
+.then(con => {
+console.log('connection reussi...')
+})
+.catch(err => {
+console.log(err)
+});
+
+
+/////////////////////////////////    LE SERVEUR A CES ROUTES,
+app.post("/todos", (req, res) => {
+	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
+	const todo = new Todo({
+		text: req.body.text,
+		completed: false,
+		completedAt: Date.now()
+	})
+		.save()
+		.then(data => {
+			 res.send(data)   //ce qui retourne dans postman dans la boite response
+       app.get('/' , (req, res) => { // envoi a / le ti text.
+       res.send(` <h1>Test mongoose - postman ${data.text} </h1>` );
+      });
+
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
+});
+
+///DANS POSTMAN
+POST http://localhost:3000/todos
+{
+	"text":"ceci vient dmlabs3",
+	"completed": false
+}
+
+
+
+///DANS COMPASS
+COMME D HAB=>
+
+///HEROKU apres avoir fait l app
+git push heroku master
+
+heroku open
+
+https://radiant-eyrie-32601.herokuapp.com ensuite /todos va nous montrer ceux de MLABS ! GREAT
+
+
+DONC HEROKU ROULE EXPRESS, ET MLABS MONGO.
+
+
+// {"data":[{"_id":"599454c89037f52b8ba6f788","text":"ceci vient dmlabs2","completed":false,"completedAt":1502893256143,"__v":0},{"_id":"5994554d09f1552bb5931821","text":"ceci vient dmlabs3","completed":false,"completedAt":1502893389954,"__v":0}]}
+
+
+DONC MAINTENANT DANS POSTMAN :
+POST https://radiant-eyrie-32601.herokuapp.com/todos
+
+envoie
+{
+	"text":"ceci vient d heroku et de postman",
+	"completed": false
+}
+
+
+retourne 200, ok !
+retour
+{
+    "__v": 0,
+    "text": "ceci vient d heroku et de postman",
+    "completed": false,
+    "completedAt": 1502896483690,
+    "_id": "59946163bd968300111c3f84"
+}
+
+
+
+/////si maintenant on essais un GET
+https://radiant-eyrie-32601.herokuapp.com/todos/5994554d09f1552bb5931821
+
+//routes du serveur
+app.get("/todos/:id", (req, res) => {
+	const id = req.params.id;
+
+	if (!ObjectID.isValid(id)) {
+		return res.status(404).send();
+	}
+		Todo.findById(id)
+			.then(todo => {
+				if (!todo) {
+					res.status(404).send();
+				}
+				res.send({todo});  // send renvois le todo
+			})
+			.catch(e => {
+				res.status(400).send();
+			});
+});
+
+
+
+
+retour 200 et le send renvois le todo
+{
+    "todo": {
+        "_id": "5994554d09f1552bb5931821",
+        "text": "ceci vient dmlabs3",
+        "completed": false,
+        "completedAt": 1502893389954,
+        "__v": 0
+    }
+}
+
+
+********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************  le grand moment, connecter heroku a mlabs, et faire de la db a distance.  ***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
+
+
+REMOVE comment deleter avec mongose
+
+const { mongoose, db } = require('./db/mongoose');  //on connecte avec mlabs
+const { Todo } = require('./models/todo');
+
+
+
+///delete tout, si y a pas de param.
+Todo.remove({}).then(res => {
+  console.log(res)
+});
+ RETOURNE L INFO SUR COMBIEN A ETE DETRUIT.
+
+
+
+//va retourner lui qui est parti
+ Todo.findOneAndRemove({_id: '599454c89037f52b8ba6f788'})
+ .then(todo => {
+  console.log(todo)
+ })
+ .catch(err => {
+   console.log(err)
+ });
+ //va retourner l item
+
+
+
+ //By ID
+ Todo.findByIdAndRemove('5994554d09f1552bb5931821')
+ .then(todo => {
+  console.log(todo)
+ })
+ .catch(err => {
+   console.log(err)
+ });
+
+ //retourne l item aussi
+ { _id: 5994554d09f1552bb5931821,
+   text: 'ceci vient dmlabs3',
+   completed: false,
+   completedAt: 1502893389954,
+   __v: 0 }
+
+
+DANS LE SERVEUR.JS MAINTENANT ON VA FAIRE UN ROUTE POUR DELETE BY ID.
+
+app.delete("/todos/:id", (req, res) => {
+  const id = req.params.id;
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Todo.findByIdAndRemove(id)
+  .then(todo => {
+    if (!todo) {
+      res.status(404).send();
+    }
+    res.send(todo);
+  })
+  .catch(err => {
+  	res.status(400).send();
+  });
+});
+
+LANCE LE SERVEUR ON VA UTILISER LES ROUTES, SI JAMAIS ... ET DANS POSTMAN LANCE UN DELETE AVEC UN ID VALID COPIER DE LA DB.  http://localhost:3000/todos/599460eb2ad0a72c9b8505ff
+
+CELA DELETE AVEC UN STATUS DE 200 ET RETOURNE COMME PREVU CELUI QUI EST MOURU
+{
+    "_id": "599460eb2ad0a72c9b8505ff",
+    "text": "ceci vient dmlabs last",
+    "completed": false,
+    "completedAt": 1502896363427,
+    "__v": 0
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*************************************HORS SUJET ASYNC AWAIT*************************************
+ASYNC AWAIT
+const fetch = require('node-fetch')
+//npm install --save node-fetch
+
+ASYNC AWAIT , QUAND ON MET ASYNC DEVANT UN FUNCTION CALL, ON PEUT METTRE AWAIT DEVANT UNE EXPRESSION QUI RETOURNE UNE PROMESSE, QUAND ON FAIT ENSUITE L EECUTION DE LA FUNCTION ASYNC , LES CHOSES SE PAUSE JUSQU A CE QUE LES PROMESSE SE RESOLVE.
+
+AIDE A EVITER LE PROMISE HELL..
+
+EN PROMISE normale
+
+ function fetchAvatarUrl(userId){
+  return fetch(`https://catappapi.herokuapp.com/users/${userId}`)
+  .then(data => {
+   return data.json()
+  })
+  .then((data) => {
+    //console.log(data) ///obj complet
+  //  console.log(data.imageUrl)  //http://images.somecdn.com/user-123.jpg
+    return data.imageUrl
+}).catch...
+}
+
+const result = fetchAvatarUrl(123)
+result.then(url => console.log(url))//http://images.somecdn.com/user-123.jpg
+
+
+MAINTENANT
+ASYNC AWAIT , C EST ECRIRE DU ASYNC, MAIS EN SYNC.
+
+
+async function fetchAvatarUrl(userId){
+  const res = await fetch(`https://catappapi.herokuapp.com/users/${userId}`);
+  //const data = res.json() //promise avec le data
+  const data = await res.json() //le data direct !!!
+  //console.log(res)  // tout la rep.
+  console.log(data.imageUrl)  //http://images.somecdn.com/user-123.jpg
+  return data.imageUrl
+}
+
+
+const result = fetchAvatarUrl(123)
+ console.log(result) est comme en haut une promesse qui resolve l adresse
+
+*************************************HORS SUJET ASYNC AWAIT*************************************
+
 
 
 ////IMPORTEZ MONGOOSE. CONNECTION PACKAGE QUI CONNECTE AVEC MONGODB////////////////////////////////////////////
@@ -1292,487 +2000,3 @@ lui est a 91.655km
 ////////////////////////////traiter la localisation avec mongoose //////////////////////////////////////
 ////////////////////////////traiter la localisation avec mongoose //////////////////////////////////////
 ////////////////////////////traiter la localisation avec mongoose //////////////////////////////////////
-
-
-
-
-
-
-
-*************************************************************************************************************************************************************MONGOOSE************************************************************ ****************************************************************************************************************
-
-
-const mongoose = require('mongoose');
-
-mongoose.Promise = global.Promise; //ES6 faut dire quel type de promise.
-
-const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de mettre le port de defaut
-  useMongoClient: true,
-})
-.then(con => {
-  console.log('connection reussi...')
-})
-.catch(err => {
-  console.log(err)
-});
-
-IMPORTANT!!
-QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
-
-
- const Todo = mongoose.model('Todo', {
-   text: {
-     type: String
-   },
-   completed: {
-     type: Boolean
-   },
-   completedAt: {
-     type: Number
-   }
- });
-
-
- //.save() retourne une promesse
- newTodo.save()
- .then(data => {
-  console.log(data)
- })
- .catch(err => {
-   console.log(err)
- });
-
-
-
- ///////////////////////////////////////////////////////////////////////////////////////////////
- ///                        ////////    comment fonctione mongoose :                                              ////
- ///////////////////////////////////////////////////////////////////////////////////////////////
- important!!!!!!
- POUR TESTER LE COUR A MIS EN PLACE UN DROP POUR PAS CROWDER LA DB POUR RIEN ,
- MONGOOSE FONCTIONNE AVEC UN MODELE CONSTRUCTEUR, ON FAIT UN SCHEMA, TSE STRING NUMBER BOOL=>
-
- ENSUITE ON FAIT UN MODEL POUR CETTE SCHEMA,
- ON ASSOSIE LE SCHEMA AU MODEL ET ON EXPORTE SI AILLEUR LE MODEL=>
-
-il est possible aussi de juste faire un model et tout mettre dedans, en skipant la schema.
-
- POUR UTILISER MONGOOSE ENSUITE, IL S AGIT DE FAIRE NEW NOMDUMODEL . ET AVEC CA ON TRAVAILLE.
-
- ///////////////////////////////////////////////////////////////////////////////////////////////
- ///                        ////////    comment fonctione mongoose :                                              ////
- ///////////////////////////////////////////////////////////////////////////////////////////////
-
-
-model sans schema :
-
-const Todo = mongoose.model('Todo', {
-  text: {
-    type: String,
-    required: true,
-    minlenght: 3
-  },
-  completed: {
-    type: Boolean
-  },
-  completedAt: {
-    type: Number
-  }
-});
-
-ensuite ....
-let newTodo = new Todo({
-  text: 'Marcher avec mongoose4',
-  completed: false,
-  completedAt: Date.now()
-})
-.save()
-.then ....
-
-
-
-MEME CHOSE EN FONCTION =
-const createUser = (emailAd, nom) =>  {
- return new User({
-   email: emailAd,
-   name: nom
- }).save()
- .then(data => {
-  console.log(data)
- })
- .catch(err => {
-   console.log(err)
- });
-}
-
-createUser('ben@axe-z.com', 'Benoit2');
-
-////////////////////////////////////POST AVEC POSTMAN (on a pas rien d autre en ce moemeny)
-////////////////////postman test de l api.
-const express = require('express');
-const bodyParser = require('body-parser');
-
-//importe le serveur mogoose qui connect a 27107 et nos 2 models sans schema.
-const { mongoose, db } = require('./db/mongoose'); //pas besoin de DB vraiment
-const { Todo } = require('./models/todo');
-const { User, createUser } = require('./models/user');
-
-const port = process.env.PORT || 3000;
-//partir express
-const app = express();
-
-//middleware body parser
-SANS BODYPARSER ON NE POURRA PAS LIRE REQ.BODY CORRECTEMENT. DONC ON DOIT L UTILISER.
-app.use(bodyParser.json());
-
-DANS POSTMAN POUR TESTER L API. HTTP://LOCALHOST:3000/TODOS FAIRE UN POST, et dans le body mettre json:
-{
-	"text":"reponse viendra dans la console"
-}
-app.post('/todos', (req,res) => {
-  console.log(req.body);        //{ text: 'reponse viendra dans la console' } revient das le terminal
-});
-
-app.listen(port, () => {
-  console.log(`ca roule sur ${port}`);
-});
-
-
-
-
-utiliser donc ceci et faire des post avec postman :
-
-app.post("/todos", (req, res) => {
-	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
-	const todo = new Todo({
-		text: req.body.text,
-		completed: false,
-		completedAt: Date.now()
-	})
-		.save()
-		.then(data => {
-			console.log(data);
-			res.send(data);  //ce qui retourne dans postman dans la boite response
-		})
-    .catch(err => {
-      res.status(400).send(err);
-    });
-});
-
-
-utiliser donc ceci et faire des post avec postman et envoyer sur un site ! :
-
-app.post("/todos", (req, res) => {
-	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
-	const todo = new Todo({
-		text: req.body.text,
-		completed: false,
-		completedAt: Date.now()
-	})
-		.save()
-		.then(data => {
-			 //console.log(data);  //dans le terminal.
-			 res.send(data)   //ce qui retourne dans postman dans la boite response
-
-       app.get('/' , (req, res) => { //a localhost:3000/
-       res.send(` <h1>Test mongoose:  ${data.text} </h1>` );  //Test mongoose: ceci vient d ailleurs (postman)
-      });
-
-		})
-		.catch(err => {
-			res.status(400).send(err);
-		});
-});
-
-
-////////////des asti de test
-const expect = require('expect');
-const request = require('supertest');
-const mongoose = require('mongoose');
-
-const {app} = require('./../serveur');
-const { Todo } = require('./../models/todo');
-
-///tout deleter avant
-beforeEach((done) => {
-  Todo.remove({}).then(() => done());
-});
-
-
-describe("POST /todos", () => {
-
-	it("should create a new todo", done => {
-		let text = "test todo text";
-
-		request(app)
-			.post("/todos")
-			.send({ text: text })
-			.expect(200) //status
-			.expect(res => {
-				expect(res.body.text).toBe(text);  //la reponse qui revient
-			})
-			.end((err, res) => {
-				if (err) {
-					return done(err);
-				}
-        //ensuite on regarde dans la db si ca y est , find retourne tout ici
-				Todo.find().then(todos => {
-					expect(todos.length).toBe(1);
-					expect(todos[0].text).toBe(text);
-					done();
-				}).catch(err => {
-          return done(err);
-        });
-			});
-	});
-
-});
-
-
-
-
-///////////////////////////////////////////////////////////GET
-GET
-FIND RETOURNE TOUT SI ON NE MET PAS DE PARAM.
-
-///action se produit en allant sur http://localhost:3000/todos
-const { Todo } = require('./models/todo');
-
-
-app.get("/todos", (req, res) => {
-  Todo.find()
-  .then(data => {
-    res.send({data})  //on le met dans un boj, pour se donner des options, facile d ajouter a un obj.
-    console.log(data[0].text);  //test todo text
-  })
-  .catch(err => {
-    res.status(400).send(err);
-  });
-});
-
-
-//TEST DE GET
-////POUR TEST DE GET, ON VEUT GARDER CA CLEAN DONC ON VA METTRE DU STOCK PAR DEFAUT
-const todos = [
-{
-  text: 'premier test',
-  completed: false
-},
-{
- text: 'deuxieme test',
- completed: false
-},
-];
-
-beforeEach((done) => {
-  Todo.remove({}).then(() => {              //efface tout
-    return Todo.insertMany(todos);          //insert le todos et retourne une promise.
-  }).then(() => done());
-});
-
-
-it("test de GET", done => {
-	request(app)
-		.get("/todos")
-		.expect(200)
-		.expect(res => {
-      console.log(res.body.todos.length);
-			expect(res.body.todos.length).toBe(2);
-		})
-		.end(done());
-});
-
-
-
-
-
-///////////////////////////////////QUERIES
-
-
-const { mongoose, db } = require('./db/mongoose');
-
-//const {app} = require('./../serveur');
-const { Todo } = require('./models/todo');
-
-const id = '599100ab170cdc199ba831c8';
-
-LE TRUC IMPORTANT DE COMPRENDRE ICI EST QUE MEM SI ON A PAS LE BON ID, PAR EXEMPLE, MONGOOSE NE RETOURENRA PAS UNE ERREUR MAIS NULL, DONC LA PROMISE VA ETRE RESOLVER A NULL, DONC IL FAUT METTRE UN if(!data) , SI ON VEUT TRAITER LE TROUBLE, LE CATCH NE SERA JAMAIS APPELÉ=> CECI DIT MIEUX VAUT LE METTRE , IL AURA UNE ERREUR SI JAMAIS LE ID N A ACUN CRISIT DE BON SENS , GENRE 'LAPIN', IL NE SERA PAS VALID, ET CREERA UN PROBLEME.
-
-////find, , retourne un array de doc,
-Todo.find({
-  completed: false           //pas besoin de new ObjectId
-})
-.limit(3)
-.then(todos => {
- console.log(todos)
-})
-
-
-//findOne   ici retourne qu une seul truc, obj, pas d array
-Todo.findOne({
-  _id: id
-})
-.then(todo => {
-  if(!todo){
-    console.log('rien de retouné')
-  }
- console.log(todo)
-});
-
-
-///best pour un id.
-Todo.findById(id)
-.then(todo => {
-  if(!todo){
-    console.log('rien de retouné')
-  }
- console.log(todo)
-});
-
-
-
-voir les docs
-http://mongoosejs.com/docs/queries.html
-ET
-https://docs.mongodb.com/manual/tutorial/query-documents/
-
-EXEMPLE :
-Person.
-  find({
-    occupation: /host/,
-    'name.last': 'Ghost',
-    age: { $gt: 17, $lt: 66 },
-    likes: { $in: ['vaporizing', 'talking'] }
-  }).
-  limit(10).
-  sort({ occupation: -1 }).
-  select({ name: 1, occupation: 1 }).
-  exec(callback);
-
-
-  IMPORTANT!!
-  QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
-
-///AVEC USER
-  const { User } = require('./models/user');
-  const idUser = '598fa32586a4460dd493cf64';
-
-   if(ObjectID.isValid(idUser)){
-     console.log('oui User!!!')
-
-     User.findById(idUser)
-     .then(user => {
-       if(!user){
-         console.log('rien de retouné')
-       }
-      console.log(user)
-     });
-   }
-
-
-
-
-
-
-   ////////////////////GET req.params.id et mongoDB
-
-
-   app.get("/todos/:id", (req, res) => {
-    res.send(req.params)    ///http://localhost:3000/todos/1562   ==== {"id":"1562"}
-   });
-
-
-
-   const {ObjectID} = require('mongodb'); //mongoNative
-
-   ////http://localhost:3000/todos/599100ab170cdc199ba831c8
-//routes
-   app.get("/todos/:id", (req, res) => {
-   	const id = req.params.id;
-
-   	if (!ObjectID.isValid(id)) {
-   		return res.status(404).send();
-   	}
-     //il met pas de else
-
-   		Todo.findById(id)
-   			.then(todo => {
-   				if (!todo) {
-   					res.status(404).send("<h1>oups</h1>");
-   				}
-   				res.send(`<h1>Bravo: ${todo.text}, id: ${todo.id}</h1>`);
-           //res.send({todo})
-   				//console.log(todo);
-   			})
-   			.catch(e => {
-   				res.status(400).send();
-   				 //console.log(e); ca donne un message d err. de typeError
-   			});
-
-   });
-
-
-
-   ////////////////////GET req.params.id
-
-//////////////////////////////////////////MLABS/////ET HEROKU////////////////////////
-  "scripts": {
-   "start": "node serveur.js",
- },
- "engines": {
-   "node": ""
- },
-///HEROKU VA ROULER DE MLABS.
-
-pour ajouter mlabs
-heroku addons:create mongolab:sandbox
-
-/////////////////////////////////POUR CONNECTION:
-MLABS DONC TERMINAL MONGOD A PAS BESOIN DE ROULER ICI :
-DANS LE FICHIER DE CONNECTION
-
-const mongoose = require('mongoose');
-mongoose.Promise = global.Promise;
-
-const db = mongoose.connect('mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp', {
-useMongoClient: true,
-})
-.then(con => {
-console.log('connection reussi...')
-})
-.catch(err => {
-console.log(err)
-});
-
-
-/////////////////////////////////    LE SERVEUR A CES ROUTES,
-app.post("/todos", (req, res) => {
-	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
-	const todo = new Todo({
-		text: req.body.text,
-		completed: false,
-		completedAt: Date.now()
-	})
-		.save()
-		.then(data => {
-			 res.send(data)   //ce qui retourne dans postman dans la boite response
-       app.get('/' , (req, res) => { //a localhost:3000/
-       res.send(` <h1>Test mongoose - postman ${data.text} </h1>` );  //Content-Type: text/html
-      });
-
-		})
-		.catch(err => {
-			res.status(400).send(err);
-		});
-});
-
-///DANS POSTMAN
-POST http://localhost:3000/todos
-{
-	"text":"ceci vient dmlabs3",
-	"completed": false
-}
-
-
-
-///DANS COMPASS
-COMME D HAB=>

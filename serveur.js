@@ -76,7 +76,7 @@ app.get("/todos/:id", (req, res) => {
 				if (!todo) {
 					res.status(404).send();
 				}
-				res.send({todo});
+				res.send(todo);
         //res.send({todo})
 				//console.log(todo);
 			})
@@ -89,6 +89,32 @@ app.get("/todos/:id", (req, res) => {
 
 
 ////////////////////GET req.params.id
+
+////////////////////Route de app.delete
+
+app.delete("/todos/:id", (req, res) => {
+  const id = req.params.id;
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Todo.findByIdAndRemove(id)
+  .then(todo => {
+    if (!todo) {
+      res.status(404).send();
+    }
+    res.send(todo);
+  })
+  .catch(err => {
+  	res.status(400).send();
+  });
+});
+
+
+
+
+////////////////////Route de app.delete
 
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
