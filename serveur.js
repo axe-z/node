@@ -2,7 +2,7 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const _ = require('lodash');
 const { mongoose, db } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User, createUser } = require('./models/user');
@@ -76,7 +76,7 @@ app.get("/todos/:id", (req, res) => {
 				if (!todo) {
 					res.status(404).send();
 				}
-				res.send(todo);
+				res.send({todo});
         //res.send({todo})
 				//console.log(todo);
 			})
@@ -90,7 +90,7 @@ app.get("/todos/:id", (req, res) => {
 
 ////////////////////GET req.params.id
 
-////////////////////Route de app.delete
+///////////////////////////////////// DELETE Route de app.delete
 
 app.delete("/todos/:id", (req, res) => {
   const id = req.params.id;
@@ -104,7 +104,7 @@ app.delete("/todos/:id", (req, res) => {
     if (!todo) {
       res.status(404).send();
     }
-    res.send(todo);
+    res.send({todo});
   })
   .catch(err => {
   	res.status(400).send();
@@ -112,9 +112,42 @@ app.delete("/todos/:id", (req, res) => {
 });
 
 
+///////////////////////////////////// DELETE Route de app.delete
+
+///////////////////////////////////// UPDATE Route de app.patch
+//const _ = require('lodash');
+app.patch("/todos/:id", (req, res) => {
+	const id = req.params.id;
+	const body = _.pick(req.body, ["text", "completed"]); //pick aider a dire quel props est dispo a updater
+
+	if (!ObjectID.isValid(id)) {
+		return res.status(404).send();
+	}
+
+	if (_.isBoolean(body.completed) && body.completed) {
+		body.completedAt = Date.now();
+	} else {
+		body.completed = false;
+		body.completedAt = null;
+	}
+
+	Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
+		.then(todo => {
+			if (!todo) {
+				res.status(404).send();
+			}
+			res.send({ todo });
+		})
+		.catch(err => {
+			res.status(400).send();
+		});
+});
 
 
-////////////////////Route de app.delete
+
+
+
+///////////////////////////////////// UPDATE Route de app.patch
 
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 

@@ -571,7 +571,7 @@ retour 200 et le send renvois le todo
 ********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************  le grand moment, connecter heroku a mlabs, et faire de la db a distance.  ***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
 
 
-REMOVE comment deleter avec mongose
+***********************  REMOVE comment deleter avec mongose
 
 const { mongoose, db } = require('./db/mongoose');  //on connecte avec mlabs
 const { Todo } = require('./models/todo');
@@ -646,6 +646,55 @@ CELA DELETE AVEC UN STATUS DE 200 ET RETOURNE COMME PREVU CELUI QUI EST MOURU
     "completedAt": 1502896363427,
     "__v": 0
 }
+
+
+
+
+
+***********************  Update comment modifier une fiche avec mongose
+on va s aider.  dans serveur.js
+
+const _ = require('lodash');
+
+
+app.patch("/todos/:id", (req, res) => {
+const id = req.params.id;
+const body = _.pick(req.body, ['text', 'completed']) //pick aider a dire quel props est dispo a updater
+
+if (!ObjectID.isValid(id)) {
+	return res.status(404).send();
+}
+
+
+if (._isBoolean(body.completed) && body.completed) {
+  body.completedAt = new Date().getTime();
+} else {
+  body.completed = false;
+  body.completedAt = null;
+}
+           // le id , ensuite $set ce qu on change , ensuite si on retourne ou pas le data.
+Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
+	.then(todo => {
+    if (!todo) {
+      res.status(404).send();
+    }
+    res.send({todo});
+	})
+	.catch(err => {
+  	res.status(400).send();
+	});
+});
+
+
+
+
+
+
+
+
+
+
+
 
 
 
