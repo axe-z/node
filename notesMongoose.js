@@ -1013,11 +1013,259 @@ S'AGIT JSUTE' DE METTRE CA BIEN CACHE DNAS NOTRE DB.
 ************************************ Autentification USER TOKEN et HASHING *******************************
 
 
+EN PRATIQUE DANS NOTRE PROJET :
+
+User.findByToken n existe pas dans mongoose, on va le faire.
+User.generateAuthToken
+
+
+Sur la page du User model , user.js :
+
+ON NE PEUT PAS METTRE DE METHODES SUR UN MODEL !!. ALORS ON VA UTILISER UNE SCHEMA ET DEPLACER CE QUI ETAIT DANS LE MODEL ET LE METTRE DANS LA SCHEMA, ENSUITE METTRE LA SCHEMA DANS LE DEUXIEME ARG DU MODEL.
+
+const UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    minlenght: 3,
+    trim: true,        //va laisser au max 1 espace entre les mots. enleve le trop au debut et fin.
+    unique: true,  //,
+    validate: {
+        validator: validator.isEmail,
+        message: '{VALUE} n\'est pas un email valide'
+    }
+  }, //email
+  password: {
+    type: String,
+    required: true,
+    minlenght: 6,
+  }, //password
+  tokens: [{
+    access: {
+      type: String,
+      required: true
+    },
+    token: {
+      type: String,
+      required: true
+    }
+  }]
+});
+const jwt = require('jsonwebtoken');
+
+ICI ON VA AJOUTER UN METHODE QUI VA PUSHER LE ACCES ET TOKEN UNE FOIS APPELER A LA CREATION..
+ON NE PEUT PAS FAIRE LES TOKEN AU DEPART SUR LE POST DANS SERVEUR.JS, PUISQU ON A BESOIN DU USER_ID,   C EST DANS LA PROMESSE QU ON VA LANCER CETTE FONCTION, QUI ELLE MEME RESAVE AVEC MAINTENANT LE TOKEN AJOUTÉ :
+
+//Fn normale, on a besoin du this
+UserSchema.methods.generateAuthToken = function() {
+	let user = this;
+	let access = "auth";
+	let token = jwt
+		.sign({ _id: user._id.toHexString(), access: access }, "abc123").toString();
+
+	user.tokens.push({ access, token });
+	return user.save().then(() => {	//met rien
+		return token;
+	});
+};
+
+
+const User = mongoose.model('User', UserSchema);
+module.exports = { User}
+
+
+DANS SERVEUR.JS
+LE POST POUR CREER UN USER on ajoute et modifie:
+
+app.post("/users", (req, res) => {
+	const body = _.pick(req.body, ["email", "password"]); ///creer body.email ..
+
+	const user = new User({     //ou const user = new User(body)
+		email: body.email,
+		password: body.password
+	});
+
+	user.save()    //BUGger on doit remmetre user.save et ne pas chainer ici !!
+		.then(() => {
+			return user.generateAuthToken();
+		})
+		.then(token => {
+			res.header("x-auth", token).send(user); //ce qui retourne dans postman dans la boite response
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
+});
+
+DANS POSTMAN ON FAIT UN POST NORMAL AVEC EMAIL ET PASSWORD:
+post http://localhost:3000/users:
+{
+	"email": "bob10@axe-z.com",
+	"password": "abc123"
+}
+
+REVIENT:
+{
+    "__v": 0,
+    "email": "bob10@axe-z.com",
+    "password": "abc123",
+    "_id": "59970d7da6f4154b04a0f00a",
+    "tokens": [
+        {
+            "access": "auth",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1OTk3MGQ3ZGE2ZjQxNTRiMDRhMGYwMGEiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNTAzMDcxNjEzfQ.9_mTeYMEnts9SOOdp0TkFefSnE71QAspR-MDm-uvwBo",
+            "_id": "59970d7da6f4154b04a0f00b"
+        }
+    ]
+}
+
+SUPER !!!
+
+le trouble c est qu on a trop d info en retour.... et des chose devraient pas etre dispo:
+on va cleaner la reponse qui se nomme toJSON() dans mongoose:
+un article cool qui explique : https://alexanderzeitler.com/articles/mongoose-tojson-toobject-transform-with-subdocuments/
+
+BREF, DANS USER.JS ON VA AJOUTER UN METHOD QUI VA CJHANGER TOJSON, SEULEMENT POUR LA USERSHEMA:
+
+//on va changer la reponse usuel pour prevenir la fuite d info privees
+UserSchema.methods.toJSON = function (){
+	let user = this;
+  let userObject = user.toObject();
+
+  return _.pick(userObject, ['_id', 'email'])  //pour ne pas retourner info importante et privee.
+}
+
+
+Dans postman maintenant si on fait le mem post , avec un email different:
+le res.send(user) du serveur.js va donenr que :
+
+{
+    "_id": "5997154a0d42024bf846dac7",
+    "email": "dje2@axe-z.com"
+}
+pu rien d autre !
+
+
+******************************
+******************************
+
+  QUOI FAIRE AVEC CA MAINTENANT ....
+  ON A DANS NOTRE HEADER UN X-AUTH QUI EST LE TOKEN,
+
+  ON VA TROUVER QUEL USER IL EST AVEC CE MEME TOKEN
+  DANS SERVEUR.JS ON VA FAIRE UN ROUTE PRIVEE :
+
+
+  app.get('/users/moi', (req, res) => {
+    const token = req.header('x-auth');
+
+    User.findByToken(token)
+
+  });
+
+FINDBYTOKEN N EXISTE PAS DANS MONGOOSE, ON VA DEVOIR LA FAIRE , ET AJOUTER LA FUNCTION A NOTRE MODEL.
+
+UserSchema.METHODS
+UserSchema.METHODS EST UN OBJECT QUI PREND DES FUNCTIONS POUR L INSTANCE, LA FICHE EN PARTICULIER
+DONC POUR LE MODEL USER ,c est user minuscule user = this ===l instance.
+
+UserSchema.STATICS
+UserSchema.STATICS EST UN OBJECT QUI PREND DES FUNCTIONS POUR LE MODEL
+Donc le User =this === le model
+
+UserSchema.statics.findByToken = function (token) {
+  let User = this;
+  let decoded;
+
+///on doit mettre ca dans un try catch , si y a quoi que ce soitr de pas ok, y a un message.
+
+  try {
+    decoded = jwt.verify(token, 'abc123'); //notre secret
+  } catch (e) {
+    return Promise.reject()     //va caller le catch et retourner un 401 (trouble d authenti)
+  }
+
+VA RETOURNER UNE PROMESSE, QUAND ON APPELE FINDBYTOKEN
+//ici si catch embarque pas..
+  return User.findOne({
+     _id: decoded._id,
+    'tokens.token': token,         //'permet de passer un truc.truc' avec = ''
+    'tokens.access': 'auth'
+  });
+};
+
+
+dans serveur.js
+app.get('/users/moi', (req, res) => {
+  const token = req.header('x-auth');
+
+  User.findByToken(token)
+ .then(user => {
+   if (!user) {
+    return Promise.reject()   ///va pitcher en bas dans catch!!
+    }
+    res.send(user);
+ })
+ .catch(err => {
+  	res.status(401).send();  //401== trouble d authenticate
+ });
+});
+
+
+maintenant dans postman :
+on va copier le x-auth du dernier fait, dans l onglet header:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1OTk3NjVmNmI3 .....
+
+Faire un get :
+http://localhost:3000/users/moi
+
+dans header en haut dans la requete, ajouter key: x-auth et le num=>
+faire la requete
+
+ET bam !
+{
+    "_id": "599765f6b79ec44f928f1b16",
+    "email": "sardgio@axe-z.com"
+}
+
+DONC SI CA FONCTIONE ON RECOIT LE USER, SI LE TOKEN EST PAS BON ON RECOIT RIEN SINON QUE LE STATUS 401
+
+Clean up :
+on fait un folder middleware, et authentification.js
+
+onst {User} = require('./../models/user');
+
+const authentification = (req, res, next) => {
+  const token = req.header('x-auth');
+    User.findByToken(token)
+   .then(user => {
+     if (!user) {
+      return Promise.reject()   ///va pitcher en bas dans catch!!
+      }
+       req.user = user;             //on va le mettre sur req
+       req.token = token;
+       next();                     //next, sinon ca arrete la ..
+   })
+   .catch(err => {
+    	res.status(401).send();
+   });
+};
+
+module.exports= {authentification};
 
 
 
+ensuite dans le serveur , on importe , et on change cec qu on avait pour le get pour juste ca , le middleware va faire la job
+//const { authentification } = require('./middleware/authentification');
+
+app.get('/users/moi', authentification, (req, res) => {
+  //authentification  va faire le boulot, et ici on ne fait qu envoyer le user , comme avant
+  res.send(req.user)
+});
 
 
+
+tout fonctionne comme avant mais c est maintenant plus facile a utiliser avec le middleware qui fait le boulot.
 
 
 

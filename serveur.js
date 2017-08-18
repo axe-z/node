@@ -9,7 +9,7 @@ const _ = require('lodash');
 const { mongoose, db } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
-
+const { authentification } = require('./middleware/authentification');
 const port = process.env.PORT;
 
 const app = express();
@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 
 ///////////////////////////////////////////////////////////MIDDLEWARES
 
-///////////////////////////////////////////////////////////POST
+///////////////////////////////////////////////////////////POST ROUTE
 app.post("/todos", (req, res) => {
 	//console.log(req.body);        //dans postman pour ttester l api. http://localhost:3000/todos
 	const todo = new Todo({
@@ -44,9 +44,9 @@ app.post("/todos", (req, res) => {
 			res.status(400).send(err);
 		});
 });
-///////////////////////////////////////////////////////////POST
+///////////////////////////////////////////////////////////POST ROUTE
 
-///////////////////////////////////////////////////////////GET
+///////////////////////////////////////////////////////////GET ROUTE
 
 ///action se produit en allant sur http://localhost:3000/todos
 app.get("/todos", (req, res) => {
@@ -60,9 +60,9 @@ app.get("/todos", (req, res) => {
   });
 });
 
-///////////////////////////////////////////////////////////GET
+///////////////////////////////////////////////////////////GET ROUTE
 
-////////////////////GET req.params.id
+////////////////////GET req.params.id ROUTE
 const {ObjectID} = require('mongodb'); //mongoNative
 
 ////http://localhost:3000/todos/599100ab170cdc199ba831c8
@@ -91,9 +91,9 @@ app.get("/todos/:id", (req, res) => {
 });
 
 
-////////////////////GET req.params.id
+////////////////////GET req.params.id ROUTE
 
-///////////////////////////////////// DELETE Route de app.delete
+///////////////////////////////////// DELETE Route de app.delete ROUTE
 
 app.delete("/todos/:id", (req, res) => {
   const id = req.params.id;
@@ -115,9 +115,9 @@ app.delete("/todos/:id", (req, res) => {
 });
 
 
-///////////////////////////////////// DELETE Route de app.delete
+///////////////////////////////////// DELETE Route de app.delete ROUTE
 
-///////////////////////////////////// UPDATE Route de app.patch
+///////////////////////////////////// UPDATE Route de app.patch ROUTE
 //const _ = require('lodash');
 app.patch("/todos/:id", (req, res) => {
 	const id = req.params.id;
@@ -150,36 +150,47 @@ app.patch("/todos/:id", (req, res) => {
 
 
 
-///////////////////////////////////// UPDATE Route de app.patch
+///////////////////////////////////// UPDATE Route de app.patch ROUTE
 
-///////////////////////////////////////////////////////////POST USER
+///////////////////////////////////////////////////////////POST USER ROUTE
 //const _ = require('lodash');
 
-app.post("/users", (req, res) => {
-const body = _.pick(req.body, ["email", "password"]); ///creer body.email ..
 
-  const user = new User({           //ou const user = new User(body)
-    email: body.email,
-    password: body.password
-  })
-    .save()
-    .then(user => {
-       //console.log(user);  //dans le terminal.
-       res.send(user)   //ce qui retourne dans postman dans la boite response
-      })
-    .catch(err => {
-      res.status(400).send(err);
-    });
+app.post("/users", (req, res) => {
+	let body = _.pick(req.body, ["email", "password"]); ///creer body.email ..
+
+	let user = new User(body);
+
+	user.save()    //BUGger on doit remmetre user.save et ne pas chainer ici !!
+		.then(() => {
+			return user.generateAuthToken();
+		})
+		.then((token) => {
+			res.header('x-auth', token).send(user); //ce qui retourne dans postman dans la boite response
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
 });
 
 
 
 
+///////////////////////////////////////////////////////////POST USER ROUTE
 
 
 
+///////////////////////////////////////////////////////////PRIVATE ROUTE
+//const { authentification } = require('./middleware/authentification');
 
-///////////////////////////////////////////////////////////POST USER
+app.get('/users/moi', authentification, (req, res) => {
+  //authentification  va faire le boulot, et ici on ne fait qu envoyer le user , comme avant
+  res.send(req.user)
+});
+ 
+
+///////////////////////////////////////////////////////////PRIVATE ROUTE
+
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {
