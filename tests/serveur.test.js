@@ -2,7 +2,7 @@ const expect = require('expect');
 const request = require('supertest');
 const mongoose = require('mongoose');
  const {ObjectID} = require('mongodb');
-
+const _ = require('lodash');
 const {app} = require('./../serveur');
 const { Todo } = require('./../models/todo');
 
@@ -15,13 +15,13 @@ const { Todo } = require('./../models/todo');
  const todos = [
  {
    _id: new ObjectID(),
-   text: 'premier test',
-   completed: false
+   text: 'premier test todo',
  },
  {
   _id: new ObjectID(),
-  text: 'deuxieme test',
-  completed: false
+  text: 'deuxieme test todo',
+  completed: true,
+  completedAt: Date.now()
  },
 ];
 
@@ -34,7 +34,7 @@ beforeEach((done) => {
 
 
 
-describe("POST /todos", () => {
+//describe("POST /todos", () => {
 	// it("should create a new todo", done => {
 	// 	let text = "test todo text";
   //
@@ -71,11 +71,11 @@ describe("POST /todos", () => {
 // });
 
 
-});
+//});
 
 
 ///599100ab170cdc199ba831c8
-describe("Test de ids", () => {
+/*describe("Test de ids", () => {
   it('expect 1 etre 1', () => {
     expect(1 + 1 ).toBe(2)
   });
@@ -91,4 +91,44 @@ describe("Test de ids", () => {
 	});
 
 
+});
+*/
+describe("Test de Patch", () => {
+  it("Ca Devrait updater cibole", (done) => {
+    const hexId = todos[0]._id.toHexString();
+    const text = 'Ceci devrait etre le text updater';
+
+    request(app)
+    .patch(`/todos/${hexId}`)
+    .send({
+      text,
+      completed: true
+    })
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(text);
+      expect(res.body.todo.completed).toBe(true);
+      expect(res.body.todo.completedAt).toBeA('number');
+    })
+    	.end(done);
+  });
+
+  it('Ca Devrait updater cibole2', (done) => {
+    const hexId2 = todos[1]._id.toHexString();
+    const text = 'Ceci devrait etre le text updater pour deuxieme test';
+
+  request(app)
+    .patch(`/todos/${hexId2}`)
+    .send({
+      text,
+      completed: false
+    })
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe('Ceci devrait etre le text updater pour deuxieme test');
+      expect(res.body.todo.completed).toBe(false);
+      expect(res.body.todo.completedAt).toNotExist();
+    })
+      .end(done);
+  });
 });

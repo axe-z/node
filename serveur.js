@@ -1,3 +1,6 @@
+///////env
+const env = require('./config');
+
 ///////////////////////////////////////////////////////////REQUIRES
 
 const express = require('express');
@@ -5,9 +8,9 @@ const bodyParser = require('body-parser');
 const _ = require('lodash');
 const { mongoose, db } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
-const { User, createUser } = require('./models/user');
+const { User } = require('./models/user');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 const app = express();
 //https://sleepy-hamlet-49567.herokuapp.com/
@@ -119,7 +122,7 @@ app.delete("/todos/:id", (req, res) => {
 app.patch("/todos/:id", (req, res) => {
 	const id = req.params.id;
 	const body = _.pick(req.body, ["text", "completed"]); //pick aider a dire quel props est dispo a updater
-
+// ET les met directement sur body , donc body.test ///
 	if (!ObjectID.isValid(id)) {
 		return res.status(404).send();
 	}
@@ -149,6 +152,34 @@ app.patch("/todos/:id", (req, res) => {
 
 ///////////////////////////////////// UPDATE Route de app.patch
 
+///////////////////////////////////////////////////////////POST USER
+//const _ = require('lodash');
+
+app.post("/users", (req, res) => {
+const body = _.pick(req.body, ["email", "password"]); ///creer body.email ..
+
+  const user = new User({           //ou const user = new User(body)
+    email: body.email,
+    password: body.password
+  })
+    .save()
+    .then(user => {
+       //console.log(user);  //dans le terminal.
+       res.send(user)   //ce qui retourne dans postman dans la boite response
+      })
+    .catch(err => {
+      res.status(400).send(err);
+    });
+});
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////POST USER
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {

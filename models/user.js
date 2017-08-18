@@ -1,44 +1,36 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
+
 const User = mongoose.model('User', {
   email: {
     type: String,
     required: true,
     minlenght: 3,
-    trim: true        //va laisser au max 1 espace entre les mots. enleve le trop au debut et fin.
-  },
-  name: {
+    trim: true,        //va laisser au max 1 espace entre les mots. enleve le trop au debut et fin.
+    unique: true,  //,
+    validate: {
+        validator: validator.isEmail,
+        message: '{VALUE} n\'est pas un email valide'
+    }
+  }, //email
+  password: {
     type: String,
-    minlenght: 3
-  }
+    required: true,
+    minlenght: 6,
+  }, //password
+  tokens: [{
+    access: {
+      type: String,
+      required: true
+    },
+    token: {
+      type: String,
+      required: true
+    }
+  }]
 });
 
 
 
-const createUser = (emailAd, nom) =>  {
- return  new User({
-   email: emailAd,
-   name: nom
- }).save()
- .then(data => {
-  console.log(data)
- })
- .catch(err => {
-   console.log(err)
- });
-}
 
-//createUser('ben@axe-z.com', 'Benoit2');
-
-// let ben = new User({
-//   email: 'benoit@axe-z.com',
-//   name: "Axe-Z"
-// })
-// .save()
-// .then(data => {
-//  console.log(data)
-// })
-// .catch(err => {
-//   console.log(err)
-// });
-
-module.exports = { User, createUser}
+module.exports = { User}

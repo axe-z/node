@@ -687,17 +687,330 @@ Todo.findByIdAndUpdate(id, { $set: body }, { new: true })
 
 
 
+ ENSUITE DANS POSTMAN
+
+patch https://radiant-eyrie-32601.herokuapp.com/todos/59947bf8026cb2001137a2f4
+envoie
+{
+	"text":"ceci vient de se faire updater (postman) ",
+	"completed": true
+}
+
+va retourner :
+
+{
+    "todo": {
+        "_id": "59947bf8026cb2001137a2f4",
+        "text": "ceci vient de se faire updater (postman) ",
+        "completed": true,
+        "__v": 0,
+        "completedAt": 1502929294880
+    }
+}
+
+
+MEME CHOSE SI VENANT DU LOCALHOST, BIEN SUR.
+
+
+*************************************TEST de update / patch*************************************
+const expect = require('expect');
+const request = require('supertest');
+const mongoose = require('mongoose');
+const {ObjectID} = require('mongodb');
+const _ = require('lodash');
+const {app} = require('./../serveur');
+const { Todo } = require('./../models/todo');
+
+ON VA SE FAIRE DU DATA PROPRE ET PREVISIBLE , DONC TORCHER CE QU ON A
+
+const todos = [
+{
+  _id: new ObjectID(),
+  text: 'premier test todo',
+},
+{
+ _id: new ObjectID(),
+ text: 'deuxieme test todo',
+ completed: true,
+ completedAt: Date.now()
+},
+];
+
+beforeEach((done) => {
+ Todo.remove({}).then(() => {              //efface tout
+   return Todo.insertMany(todos);          //insert le todos et retourne une promise.
+ }).then(() => done());
+});
+
+BON ... ici on mimique ce qu on fait dans postman. y a pas de $set ... ou rien de complex.
+
+describe("Test de Patch", () => {
+  it("Ca Devrait updater cibole", (done) => {
+    const hexId = todos[0]._id.toHexString();
+    const text = 'Ceci devrait etre le text updater';
+
+    request(app)
+    .patch(`/todos/${hexId}`)
+    .send({
+      text,
+      completed: true
+    })
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(text);
+      expect(res.body.todo.completed).toBe(true);
+      expect(res.body.todo.completedAt).toBeA('number');
+    })
+    	.end(done);
+  });
+
+  it('Ca Devrait updater cibole2', (done) => {
+    const hexId2 = todos[1]._id.toHexString();
+    const text = 'Ceci devrait etre le text updater pour deuxieme test';
+
+    .patch(`/todos/${hexId}`)
+    .send({
+      text,
+      completed: false
+    })
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(todos[1].text);
+      expect(res.body.todo.completed).toBe(false);
+      expect(res.body.todo.completedAt).toNotExist();
+    })
+      .end(done);
+  });
+});
 
 
 
+************************************FIN *TEST de update / patch*************************************
+
+
+************************************Separer la DB dev et test *************************************
+
+par default sur Heroku,
+environement process.env.NODE_ENV est a === 'production'
+
+CE QU ON VEUT C EST QUE QUAND L ENV EST A DEV, CE SOIT MLBS, ET QUAND ON FAIT DES TEST, ON RESTE SUR LOCALHOST=>
+IL Y AURA UN DB TODOAPP, SUR MLABS ET TODOAPPTEST, SUR NOTRE MACHINE.
+
+Dans le package.json:
+
+"test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && mocha tests/*.test.js",
+"test2watch": "nodemon --exec  \"npm test\"",
+
+DANS CONFIG.JS
+///////ENV
+DONC QUAND ON ROULE UN TEST, process.env.NODE_ENV SERA MIS EN TEST, SINON C EST DEV.
+
+const env = process.env.NODE_ENV || 'development';  //soit test ou dev
+console.log('env-*******', env)
+if(env === 'development'){
+  process.env.PORT = 3000;
+  process.env.MONGODB_URI = 'mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp';
+} else if (env === 'test') {
+  process.env.PORT = 3000;
+  process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoAppTest';
+}
+
+
+AINSI ON SCRAPP PAS LE DATA DANS NOS TEST.
+ON A JUSTE A FAIRE UN TEST ET TODOAPPTEST VA SE CREER, J AI ROBOMONGO POUR LES TEST ET COMPASS POUR LA VRAIE DB.
 
 
 
+************************************Separer la DB dev et test *************************************
 
 
 
+************************************ USER et options avancees d autenthification *********************
+ON VA FAIRE UN  USER DE FACON SECURE AVEC ENCRYPTION :
+
+http://mongoosejs.com/docs/validation.html
+
+ npm install validator --save
+
+const validator = require('validator');
+validator.isEmail('foo@bar.com'); //true ou false
 
 
+npm install validator --save
+
+User pimper
+const mongoose = require('mongoose');
+const validator = require('validator');
+
+const User = mongoose.model('User', {
+  email: {
+    type: String,
+    required: true,
+    minlenght: 3,
+    trim: true,        //va laisser au max 1 espace entre les mots. enleve le trop au debut et fin.
+    unique: true  //,
+    validate: {
+        validator: validator.isEmail, ///va retourner vrai ou faux
+        message: '{VALUE} n\'est pas un email valide'
+    }
+  }, //email
+  password: {
+    type: String,
+    required: true,
+    minlenght: 6,
+  }, //password
+  tokens: [{
+    access: {
+      type: String,
+      required: true
+    },
+    token: {
+      type: String,
+      required: true
+    }
+  }]
+});
+
+
+Dans serveur ...
+Post
+ *************************************
+///////////////////////////////////////////////////////////POST USER *************************************
+//const _ = require('lodash');
+
+app.post("/users", (req, res) => {
+const body = _.pick(req.body, ["email", "password"]); ///creer body.email ..
+
+  const user = new User({     //ou const user = new User(body) DIRECTEMENT, C EST QUE BODY EST JUSTEMENT CA..
+    email: body.email,
+    password: body.password
+  })
+    .save()
+    .then(user => {
+       //console.log(user);  //dans le terminal.
+       res.send(user)   //ce qui retourne dans postman dans la boite response
+      })
+    .catch(err => {
+      res.status(400).send(err);
+    });
+});
+
+
+test dans postman de POST http://localhost:3000/users:
+{
+    "__v": 0,
+    "email": "benoit@axe-z.com",
+    "password": "0123456",
+    "_id": "5996307d87f37b437c03fd34",
+    "tokens": []
+}
+
+
+SI ON TENTE DE RENVOYER LE MEME EMAIL, LE MEME POST EN FAIT , UNE DEUXIEME FOIS. ON AURA UN MESSGE 400:
+"errmsg": "E11000 duplicate key error index: todoapp.users.$email_1 dup key: { : \"benoit@axe-z.com\" }",
+PUISQUE DANS LE MODEL ON A DIT QU ON LE VOULAIT UNIQUE... LA SECONDE FICHE NE SE FERA DONC PAS , PARFAIT !
+
+EMAIL PAS BON  RETOURNE :
+      "message": "benoit@axe m n'est pas un email valide",
+ LA SECONDE FICHE NE SE FERA DONC PAS , PARFAIT !
+
+ *************************************
+///////////////////////////////////////////////////////////POST USER *************************************
+
+************************************ Autentification USER TOKEN et HASHING *******************************
+faire un token system, pour donner permissions.
+hashing.js avec crypto.js
+
+npm i crypto-js --save
+
+const {SHA256} = require('crypto-js')
+SHA256 est un de plusieurs mode de compression, en 256-bits.
+
+simple hashing, donnera toujours la meme chose pour ce string:
+
+let  message = 'Je suis user num 3';
+const hash = SHA256(message) //.toString(); lui met ca , mais ca change rien
+
+console.log(`Message: ${message}`);
+console.log(`Hash: ${hash}`);
+
+
+DONNE :
+Message: Je suis user num 3
+Hash: 7f601a5c5a9072f3fb731c54dd7d940ce3006f788858c6962f052e5065ab9d81
+
+
+
+SALT ET HASH
+SOURCEFORGE, EUX HASH LEUR DOWNLOADS, ON PEUT VERIFIER SI ON A BIEN TELECHARGER LA BONNE CHOSE SI ON PREND LEUR NUMERO ET QU ON HASH LE DOWNLOAD, ILS SERA EXACTEMENT LE MEME NUMERO . ILS NE SALT PAS LE DOWNLOAD.
+AVEC SALT ON AJOUTE UN PTIT BOUT RENDANT LE DECRYPTAGE IMPOSSIBLE. NON SEULEMENT IL DOIT AVOIR LE BON DATA MAIS AUSSI NOTRE MOTSECRET.
+
+const data = {
+  id: 4
+}
+PUISQUE C EST UN OBJECT, ON DOIT LE STRINGIFIER.
+const token = {
+  data,
+  hash: SHA256(JSON.stringify(data) + 'somesecret').toString()
+}
+
+ const resultHash = SHA256(JSON.stringify(token.data) + 'somesecret').toString();
+
+if(resultHash === token.hash) {
+  console.log('data a pas ete changé')
+} else {
+  console.log('ne trust pas ca')
+}
+
+COMMENT CA MARCHE : !!!IMPORTANT
+
+Donc un hacker qui a le id4 en veut a lui qui a le id5 et veut detruire le contenu :
+il va prendre son token.data.id = 4 et le changer pour token.data.id = 5
+ensuite il va tenter de hasher :
+hash: SHA256(JSON.stringify(data)).toString()
+
+il va essayer le hash , mais il ne fonctionnera pas, il lui manque le motsecret... qui modifie le hash.
+
+
+CECI SE NOMME LE JSON WEB TOKEN (JWT) - C\'EST VIEUX COMME LE PAPE.
+
+MAIS CECI N\'EST PAS VRAIMENT LA MANIERE AVEC CRYPTO, IL EXISTE UN LIBRAIRIE QUI FAIT TOUT CA POUR NOUS ( LE (JWT))
+'
+
+************************************ JSON WEB TOKEN
+1 MILLION DE FOIS PLUS SIMPLE QU AVEC CRYPTO :
+
+npm i jsonwebtoken --save
+const jwt = require('jsonwebtoken');
+
+EN GROS C EST SEULEMENT 2 FUNCTIONS, UNE QUI FAIT LE HASH ET SALT ET LAUTRE QUI LA VALIDE !
+
+jwt.sign()
+jwt.verify()
+
+
+const data = {
+  id: 10
+}
+
+
+                      //data ENSUITE secret
+const token = jwt.sign(data, '123abc');
+console.log(token)
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAsImlhdCI6MTUwMzAyMjA2Mn0.w9QlRYXLyypiM2t_6uI9vQjt93Y26bwuvgfllUGSf2Y
+                        //TOKEN ENSUITE MEMEsecret
+const decode = jwt.verify(token, '123abc');
+console.log(decode)
+//{ id: 10, iat: 1503022243 } malade !!
+
+THATS IT !!!
+SI Y A UN FUCKURY , ON AURA UN MESSAGE QUE LA SIGNATURE N EST PAS OK
+
+https://jwt.io/ POUR TESTER LES HASH !!
+
+S'AGIT JSUTE' DE METTRE CA BIEN CACHE DNAS NOTRE DB.
+
+************************************ Autentification USER TOKEN et HASHING *******************************
 
 
 
@@ -757,6 +1070,9 @@ const result = fetchAvatarUrl(123)
 *************************************HORS SUJET ASYNC AWAIT*************************************
 
 
+
+
+*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************AUTRE COUR ************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
 
 ////IMPORTEZ MONGOOSE. CONNECTION PACKAGE QUI CONNECTE AVEC MONGODB////////////////////////////////////////////
 //test_helper.js

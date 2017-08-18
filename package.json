@@ -7,10 +7,8 @@
     "start": "node serveur.js",
     "app": "nodemon app.js",
     "server": "nodemon server.js -e js,hbs",
-    "test": "mocha **/*.test.js",
-    "test2": "mocha tests/*.test.js",
+    "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && mocha tests/*.test.js",
     "test2watch": "nodemon --exec  \"npm test\"",
-    "moc": "nodemon --exec  \"npm test\"",
     "appmongo": "nodemon serveur.js"
   },
   "engines": {
@@ -21,9 +19,11 @@
   "dependencies": {
     "axios": "^0.16.2",
     "body-parser": "^1.17.2",
+    "crypto-js": "^3.1.9-1",
     "expect": "^1.20.2",
     "express": "^4.15.3",
     "hbs": "^4.0.1",
+    "jsonwebtoken": "^7.4.3",
     "lodash": "^4.17.4",
     "mocha": "^3.5.0",
     "mongodb": "^2.2.31",
@@ -32,6 +32,7 @@
     "nodemon": "^1.11.0",
     "request": "^2.81.0",
     "supertest": "^3.0.0",
+    "validator": "^8.0.0",
     "yargs": "^4.7.1"
   }
 }
