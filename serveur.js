@@ -181,21 +181,31 @@ app.post("/users", (req, res) => {
 
 
 ///////////////////////////////////////////////////////////PRIVATE ROUTE
-//const { authentification } = require('./middleware/authentification');
+//const { authentification } = require('./middleware/authentification'); //en haut
 
 app.get('/users/moi', authentification, (req, res) => {
   //authentification  va faire le boulot, et ici on ne fait qu envoyer le user , comme avant
   res.send(req.user)
 });
- 
+
 
 ///////////////////////////////////////////////////////////PRIVATE ROUTE
+
+
+
+
+
+
+
+
 
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {
   console.log(`ca roule sur ${port}`);
 });
+///////////////////////////////////////////////////////////SERVEUR LISTEN
+
 
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 

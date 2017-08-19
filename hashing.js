@@ -1,4 +1,7 @@
 const {SHA256} = require('crypto-js')
+const bcrypt = require('bcryptjs');
+
+
 
 //SHA256 est un de plusieurs mode de compression, en 256-bits.
 /*
@@ -28,6 +31,8 @@ if(resultHash === token.hash) {
 }
 */
 
+
+/*
 //AVEC JSON WEB TOKEN
 const jwt = require('jsonwebtoken');
 
@@ -42,3 +47,21 @@ console.log(token)
 const decode = jwt.verify(token, '123abc');
 console.log(decode)
 //{ id: 10, iat: 1503022243 } malade !!
+*/
+
+///hash ET salt
+
+const password = '123abc';
+
+//CREER LE HASH ET SALT
+bcrypt.genSalt(10, (err, salt) => {
+  bcrypt.hash(password, salt, (err, hash) => {
+  //  console.log(hash) //$2a$10$pxEBmiSQRGm/tbslmirBxOZuAukKBxU2KLqgq/WymyqoKwdT6fJHq
+  })
+})  //10 est la longueur, donc un brut force est tuff.
+
+//LIRE LE HASH ET SALT
+const hashedPas = '$2a$10$pxEBmiSQRGm/tbslmirBxOZuAukKBxU2KLqgq/WymyqoKwdT6fJHq';
+bcrypt.compare(password, hashedPas, (err, result) => {
+  console.log(result); //TRUE
+})

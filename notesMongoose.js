@@ -1269,6 +1269,84 @@ tout fonctionne comme avant mais c est maintenant plus facile a utiliser avec le
 
 
 
+//////////////////////////////SALTER
+
+DE RETOUR DANS LE PLAYGROUND.... HASHING.JS
+
+BCRYPTJS
+npm i --save bcryptjs
+const bcrypt = require('bcryptjs');
+
+const password = '123abc';
+
+//CREER LE HASH ET SALT
+bcrypt.genSalt(10, (err, salt) => {
+  bcrypt.hash(password, salt, (err, hash) => {
+    console.log(hash) //$2a$10$pxEBmiSQRGm/tbslmirBxOZuAukKBxU2KLqgq/WymyqoKwdT6fJHq
+  })
+})  //10 est la longueur, donc un brut force est tuff.
+
+//LIRE LE HASH ET SALT
+const hashedPas = '$2a$10$pxEBmiSQRGm/tbslmirBxOZuAukKBxU2KLqgq/WymyqoKwdT6fJHq';
+bcrypt.compare(password, hashedPas, (err, result) => {
+  console.log(result); //TRUE
+})
+IL FAUT DONC AVOIR LES DEUX CHOSES EN MAIN POUR VERIFIER, LE VRAI PASSWORD ET LE HASH/SALTED , DONC EN SOI, AVOIR LE HASH/SALTED LE hashedPas, NE VAUT ABSOLUMENT RIEN.
+
+
+//////////////////////////////SALTER DANS LE MODEL AVEC MONGOOSE MIDDLEWARE dans le model.
+IL Y A DES DIZAINES DE MIDDLEWARES POUR MONGOOSE:
+http://mongoosejs.com/docs/middleware.html
+
+USER.JS
+ON VEUT PASSER DU CODE AVANT QU UN USER PUISSE ETRE SAVER. ET MONGOOSE LE PERMET :
+UserSchema.pre('save', ... salter et hasher
+ PRE OU POST PAR EXEMPLE
+UserSchema.post('init', function(doc) {
+  console.log('%s A ETE initialized from the db', doc._id);
+});
+
+//donc ici dnas user.js :
+//const bcrypt = require('bcryptjs');  il faut bcryptjs
+
+UserSchema.pre('save', function (next) { //FN ON A BESOIN DU THIS
+  var user = this; //pour pouvoir faire user.truc ou ici password.
+///POUR NE PAS HASHER UN HASH ET FUCKER LE CHIEN
+  if (user.isModified('password')) {  // retourne un bool de mongoose qui prouve que le password est changé
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(user.password, salt, (err, hash) => { //c est la form de la fn hash
+        user.password = hash;  //ici on set le password a etre le salt qui nous revient
+        next();  //next sinon ca bloque ici
+      });
+    });
+  } else {
+    next();
+  }
+});
+user.isModified va etre true, si novueau user, ou si le password est modifier, non pas si on modifie , le nom ou autre.
+
+
+MAINTENANT,
+RELANCER LE SERVEUR , DROPPER TOUT LA DB USERS, LES PASSWORD SERONT PAS OK ET HASHER
+RELANCER UN POST http://localhost:3000/users
+{
+	"email": "benoit@axe-z.com",
+	"password": "0123456"
+}
+
+ENSUITE LE RETOUR :
+DANS COMPASS :
+_id:59984e4512f10d56a75022b5
+email:"benoit@axe-z.com"
+password:"$2a$10$dFlwN5INGa9l.QuXCx1ucOsqQ4OmejriSh.biYYeTAN3sqV/LSw/2" //qui 0123456 en fait
+tokens:Array
+__v:1
+
+
+CA MARCHE LE PASSWORD EST HASHER ET SALTER.
+
+
+
 
 
 *************************************HORS SUJET ASYNC AWAIT*************************************

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 ///on ne peut pas mettre de methodes sur un model. Alors on va utiliser une Schema
 var UserSchema = new mongoose.Schema({
@@ -91,15 +92,19 @@ UserSchema.statics.findByCredentials = function (email, password) {
     });
   });
 };
+*/
 
-UserSchema.pre('save', function (next) {
-  var user = this;
 
-  if (user.isModified('password')) {
+//const bcrypt = require('bcryptjs');
+
+UserSchema.pre('save', function (next) { //FN ON A BESOIN DU THIS
+  var user = this; //pour pouvoir faire user.truc ou ici password.
+///POUR NE PAS HASHER UN HASH ET FUCKER LE CHIEN
+  if (user.isModified('password')) {   //is.modifier retourne un bool de mongoose
     bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(user.password, salt, (err, hash) => {
-        user.password = hash;
-        next();
+      bcrypt.hash(user.password, salt, (err, hash) => { //c est la form de la fn hash
+        user.password = hash;  //ici on set le password a etre le salt qui nous revient
+        next();  //next sinon ca bloque ici
       });
     });
   } else {
@@ -107,7 +112,7 @@ UserSchema.pre('save', function (next) {
   }
 });
 
-*/
+
 const User = mongoose.model('User', UserSchema);
 
 
