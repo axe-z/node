@@ -169,12 +169,9 @@ app.post("/users", (req, res) => {
 			res.header('x-auth', token).send(user); //ce qui retourne dans postman dans la boite response
 		})
 		.catch(err => {
-			res.status(400).send(err);
+			res.status(400).send();
 		});
 });
-
-
-
 
 ///////////////////////////////////////////////////////////POST USER ROUTE
 
@@ -191,8 +188,27 @@ app.get('/users/moi', authentification, (req, res) => {
 
 ///////////////////////////////////////////////////////////PRIVATE ROUTE
 
+///////////////////////////////////////////////////////////LOGIN ROUTE
+//findByCredentials()
+app.post("/users/login",	 (req, res) => {
+	let body = _.pick(req.body, ["email", "password"]); ///creer body.email ..
+  let user = new User(body);
+
+	User.findByCredentials(body.email, body.password)
+		.then(user => {
+			return user.generateAuthToken()
+			.then((token) => {
+				res.header('x-auth', token).send(user); //ce qui retourne dans postman dans la boite response
+			});
+ })
+   .catch(err => {
+			res.status(400).send();
+	 });
+});
 
 
+
+///////////////////////////////////////////////////////////LOGIN ROUTE
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {

@@ -1456,10 +1456,10 @@ describe("Test de Get users/me", () => {
 
   	request(app)
   		.post("/users")
-  		// .set('x-auth', users[0].tokens[0].token)
+
   		.expect(200)
   		.expect(res => {
-  			//faut pas oublié qu on bloque la reponmse a donner que ca..
+
   			expect(res.header["x-auth"]).toExist();
   			expect(res.body._id).toExist();
   			expect(res.body.email).toBe(email );
@@ -1496,9 +1496,71 @@ describe("Test de Get users/me", () => {
 
 
 
+*************************************LOGIN******************************************************************
+
+Dans serveur.js
+faire un post sur
+
+//findByCredentials() et on veut ajouter un token
+User.findByCredentials(body.email, body.password)
+  .then(user => {
+    return user.generateAuthToken()
+    .then((token) => {
+      res.header('x-auth', token).send(user); //ce qui retourne dans postman dans la boite response
+    });
+})
+ .catch(err => {
+    res.status(400).send();
+ });
+});
 
 
 
+DANS USER. FAIRE UN METHODE QUI VA COMPARER LE PASSWORD DU POST ET LUI HASH ET SALT
+
+UserSchema.statics.findByCredentials = function(email, password) {
+	var User = this;
+
+	return User.findOne({ email }).then(user => {   //findOne retourne un Obj, pas un array. va mieux
+		if (!user) {
+			return Promise.reject();
+		}
+    //parce que bcrypt fonctionne avec un Callback et pas prom. lui il fait lui meme la promisse
+		return new Promise((resolve, reject) => {
+			//bcrypt.compare lui entrer normal au post et lui creer avec hash et salt
+			bcrypt.compare(password, user.password, (err, res) => {
+				//besoin des deux
+				if (res) {
+					resolve(user); //ca te donne le user
+				} else {
+					reject();
+				}
+			});
+		});
+	});
+};
+
+
+Pour finalement dans Postman :
+{
+	"email": "benoit@axe-z.com",
+	"password": "0123456"
+}
+envoyer un qui existe dans la DB
+
+et on recoit :
+{
+    "_id": "59984e4512f10d56a75022b5",
+    "email": "benoit@axe-z.com"
+}
+
+Bravo !! , si le password est fucké au post, on recoit rien sinon qu un 400
+
+et y a un x-auth
+on peut avec le numero , faire un get, en ajoutant un header manuellement avec ce numero et ca fonctionne.
+
+
+*************************************LOGIN******************************************************************
 
 
 

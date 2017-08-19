@@ -71,7 +71,7 @@ UserSchema.statics.findByToken = function (token) {
   });
 };
 
-/*
+
 UserSchema.statics.findByCredentials = function (email, password) {
   var User = this;
 
@@ -79,12 +79,12 @@ UserSchema.statics.findByCredentials = function (email, password) {
     if (!user) {
       return Promise.reject();
     }
-
+    //parce que bcrypt fonctionne avec un Callback et pas prom. lui il fait lui meme la promisse 
     return new Promise((resolve, reject) => {
-      // Use bcrypt.compare to compare password and user.password
-      bcrypt.compare(password, user.password, (err, res) => {
+      //bcrypt.compare lui entrer normal au post et lui creer avec hash et salt
+      bcrypt.compare(password, user.password, (err, res) => {  //besoin des deux
         if (res) {
-          resolve(user);
+          resolve(user);   //ca te donne le user et le retourne d en haut (findOne)
         } else {
           reject();
         }
@@ -92,7 +92,7 @@ UserSchema.statics.findByCredentials = function (email, password) {
     });
   });
 };
-*/
+
 
 
 //const bcrypt = require('bcryptjs');
