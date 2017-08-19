@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const _ = require('lodash');
 const {app} = require('./../serveur');
 const { Todo } = require('./../models/todo');
+const {todos, populateTodos, users, populateUsers} = require('./seed');
+
 
 ////POUR TEST DE POST, ON VEUT TOUT ENLEVER
 // beforeEach((done) => {
@@ -12,24 +14,21 @@ const { Todo } = require('./../models/todo');
 // });
 
 ////POUR TEST DE GET, ON VEUT GARDER CA CLEAN DONC ON VA METTRE DU STOCK PAR DEFAUT
- const todos = [
- {
-   _id: new ObjectID(),
-   text: 'premier test todo',
- },
- {
-  _id: new ObjectID(),
-  text: 'deuxieme test todo',
-  completed: true,
-  completedAt: Date.now()
- },
-];
+//  const todos = [
+//  {
+//    _id: new ObjectID(),
+//    text: 'premier test todo',
+//  },
+//  {
+//   _id: new ObjectID(),
+//   text: 'deuxieme test todo',
+//   completed: true,
+//   completedAt: Date.now()
+//  },
+// ];
 
-beforeEach((done) => {
-  Todo.remove({}).then(() => {              //efface tout
-    return Todo.insertMany(todos);          //insert le todos et retourne une promise.
-  }).then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 
 
@@ -131,4 +130,71 @@ describe("Test de Patch", () => {
     })
       .end(done);
   });
+});
+
+
+describe("Test de Get users/me", () => {
+  it("Ca Devrait marcher ben", (done) => {
+    request(app)
+    .get('users/moi')
+    .set('x-auth', users[0].tokens[0].token)
+    .expect(200)
+    .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
+      expect(res.body._id).toBe(users[0]._id.toHexString())
+      expect(res.body.email).toBe(users[0].email)
+    })
+    .end(done());
+  });
+
+  it('de vrait retourner un 401', (done) => {
+    request(app)
+    .get('/users/moi')
+    //Si on set pas de 'x-auth'
+    .expect(401)
+    .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
+      expect(res.body).toBe({})
+    })
+    .end(done());
+  });
+
+// it("devrait retourner une erreur de validation", (done) => {
+// 	let email = "benoit@info.com";
+// 	let password = "543210";
+//
+// 	request(app)
+// 		.post("/users")
+// 		// .set('x-auth', users[0].tokens[0].token)
+// 		.expect(200)
+// 		.expect(res => {
+// 			//faut pas oublié qu on bloque la reponmse a donner que ca..
+//
+// 			expect(res.header["x-auth"]).toExist();
+// 			expect(res.body._id).toExist();
+// 			expect(res.body.email).toBe(email );
+// 		})
+//   .end(done());
+// });
+
+  // it('devrait dire que c est pas valide', (done) => {
+  //   request(app)
+  // 		.post("/users")
+  //     .send({
+  //       email: 'ben',
+  //       password:' 123'
+  //     })
+  //     .expect(400)
+  //     .end(done());
+  // });
+
+  it('devrait pas creer un user si meme email', (done) => {
+    request(app)
+      .post("/users")
+      .send({
+        email: "ben@axe-z.com",
+    		password: "abc1234",
+      })
+      .expect(400)
+      .end(done());
+  });
+
 });

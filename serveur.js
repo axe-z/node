@@ -153,7 +153,7 @@ app.patch("/todos/:id", (req, res) => {
 ///////////////////////////////////// UPDATE Route de app.patch ROUTE
 
 ///////////////////////////////////////////////////////////POST USER ROUTE
-//const _ = require('lodash');
+//const _ = require('lodash');   //en haut
 
 
 app.post("/users", (req, res) => {
@@ -193,12 +193,6 @@ app.get('/users/moi', authentification, (req, res) => {
 
 
 
-
-
-
-
-
-
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {
@@ -206,7 +200,5 @@ app.listen(port, () => {
 });
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
-
-///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 module.exports = { app };

@@ -1349,6 +1349,159 @@ CA MARCHE LE PASSWORD EST HASHER ET SALTER.
 
 
 
+*************************************tester USERS*
+
+on va deplacer notre logique de depart , qui ajoute du data et drop tout avant chaque test :
+dans seed.js on va mettre ca la ..
+
+const {ObjectID} = require('mongodb');
+const { Todo } = require('./../models/todo');
+const { User } = require('./../models/user');
+const jwt = require('jsonwebtoken');
+
+
+const userOneId = new ObjectID();
+const userTwoId = new ObjectID();
+//parce que dans jwt.sign on a besoin du id, on va faire le id avant et le mettre en variable.
+const users = [
+	{
+		_id: userOneId,
+		email: "ben@axe-z.com",
+		password: "abc123",
+		tokens: [
+			{
+				access: "auth",
+				token: jwt.sign({ userOneId, access: "auth" }, "secaxe").toString()
+			}
+		]
+	},
+	{
+		_id: userTwoId,
+		email: "info@axe-z.com",
+		password: "abc123!!",
+		tokens: [
+			{
+				access: "auth",
+				token: jwt.sign({ userTwoId, access: "auth" }, "secaxe").toString()
+			}
+		]
+	}
+];
+
+//faut le faire differement pour user, sinon ca ne passera pas par le middleware de mongoose (hash salt)
+//a cause de insertMany qui by-pass.
+const populateUsers = (done) => {
+  User.remove({}).then(() => {              //efface tout
+   let userOne = new User(users[0]).save(); //en fiasant save, on va passer par le middleware.
+   let userTwo = new User(users[1]).save();
+
+   return Promise.all([userOne, userTwo])
+  }).then(() => done());
+}
+
+
+les test se font sur serveur.test.js encore, mais la prelogique est dans seed=>
+meme chose pour todos.
+pour que le test marche , on ne peut poas faire testMany, sinon ca ne passe pas par ce qu on a fait pour le salt et hash, le middleware pre('save')..
+
+
+
+module.exports = {
+  todos, populateTodos, users, populateUsers
+}
+
+
+et dnas le serveur.test.js :
+const {todos, populateTodos, users, populateUsers} = require('./seed');
+
+beforeEach(populateUsers);
+beforeEach(populateTodos);
+
+
+on va pouvoir mieux tester les users maintenant , le password est salt et hasher, il a passer par le model qui fait5 ca, et le token y est grace a jwt.sign.
+
+Comme suit :
+
+
+describe("Test de Get users/me", () => {
+  it("Ca Devrait marcher ben", (done) => {
+    request(app)
+    .get('users/moi')
+    .set('x-auth', users[0].tokens[0].token)
+    .expect(200)
+    .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
+      expect(res.body._id).toBe(users[0]._id.toHexString())
+      expect(res.body.email).toBe(users[0].email)
+    })
+    .end(done());
+  });
+
+
+  it('de vrait retourner un 401', (done) => {
+    request(app)
+    .get('users/moi')
+    //Si on set pas de 'x-auth'
+    .expect(401)
+    .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
+      expect(res.body).toBe({}) tout seul et vide en dedans ... pauv-ti
+    })
+    .end(done());
+  });
+
+
+
+  it("devrait retourner une erreur de validation", (done) => {
+  	let email = "benoit@info.com";
+  	let password = "543210";
+
+  	request(app)
+  		.post("/users")
+  		// .set('x-auth', users[0].tokens[0].token)
+  		.expect(200)
+  		.expect(res => {
+  			//faut pas oublié qu on bloque la reponmse a donner que ca..
+  			expect(res.header["x-auth"]).toExist();
+  			expect(res.body._id).toExist();
+  			expect(res.body.email).toBe(email );
+  		})
+    .end(done());
+  });
+
+
+  it('devrait dire que c est pas valide', (done) => {
+    request(app)
+      .post("/users")
+      .send({
+        email: 'ben',
+        password:' 123'
+      })
+      .expect(400)
+      .end(done());
+  });
+
+  it('devrait pas creer un user si meme email', (done) => {
+    request(app)
+      .post("/users")
+      .send({
+        email: "ben@axe-z.com",
+        password: "abc1234",
+      })
+      .expect(400)
+      .end(done());
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
 *************************************HORS SUJET ASYNC AWAIT*************************************
 ASYNC AWAIT
 const fetch = require('node-fetch')
