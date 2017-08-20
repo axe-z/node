@@ -1560,7 +1560,106 @@ et y a un x-auth
 on peut avec le numero , faire un get, en ajoutant un header manuellement avec ce numero et ca fonctionne.
 
 
+
+
+Voici un test :
+describe("Test de post User/login", () => {
+  it("Ca Devrait loguer le suer avec un retour d auth token ", () => {
+    request(app)
+     .post("/users/login")
+     .send({
+       email: users[1].email,
+       password: users[1].password
+     })
+     .expect(200)
+     .expect(res => {
+      expect(res.header["x-auth"]).toExist();
+     })
+        .end((e , res)=> {
+          if(e){
+            return done(e)
+          }
+
+          User.findById(users[1]._id)
+          .then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: 'auth',
+              token: res.header["x-auth"]
+            });
+            done();
+          }).catch(e => {
+            return done(e)
+          });
+        });
+  });
+});
 *************************************LOGIN******************************************************************
+
+
+
+*************************************DÉ LOGuer************************************************
+
+Dans serveur.js
+
+// on va rendre ca private, avec authentification
+app.delete("/users/me/token",	authentification,  (req, res) => {
+	//authentification retourne le user en req,user et le token en req.token
+	//on va creer une methode instance (user pas User) dans User.js qui va faire ca...
+	req.user.removeToken(req.token)
+	.then(data => {
+	  res.status(200).send();
+	})
+	.catch(err => {
+ res.status(400).send();
+	});
+});
+
+
+ET DANS USER.JS
+
+//Fn normale, on a besoin du this
+UserSchema.methods.removeToken = function(token) {
+	let user = this;
+  //$pull est un truc mongo natif, qui si ca match avec token ici va retirer l info completement.
+	return user.update({
+		$pull: {
+			tokens: {
+				token: token    //match donc decrisse le data
+			}
+		}
+	});
+};
+
+
+DONC EN GROS authentification NOUS DONNE LE USER ET LE TOKEN, AVEC CELUI CI ON FAIT UN MATCH DE TOKEN ET LE $PULL ENLEVE COMPLETEMENT L INFO DANS LE UPDATE, ON RETOURNE L UPDATE POUR POUVOIR CHAINER LA PROMESSE.
+
+
+POUR VERIFIER SI CA FONCTIONNE,
+DANS POSTMAN,
+DELETE http://localhost:3000/users/moi/token , AVOIR EN NOTE LE TOKEN DE LA FICHE QU ON VEUT DELETE LE TOKEN.
+DANS LE HEADER, METTRE X-AUTH ET COLLER LE NUMERO
+
+SEND ET VOILA. LE TOKEN EST COMPLETEMENT ENLEVÉ DE CETTE FICHE.
+
+
+
+
+*************************************DÉ LOGuer************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

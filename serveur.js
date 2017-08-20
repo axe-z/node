@@ -209,6 +209,28 @@ app.post("/users/login",	 (req, res) => {
 
 
 ///////////////////////////////////////////////////////////LOGIN ROUTE
+
+///////////////////////////////////////////////////////////DELOGUER ROUTE EN ENLEVANT LE TOKEN
+// on va rendre ca private, avec authentification
+app.delete("/users/moi/token",	authentification,  (req, res) => {
+	//authentification retourne le user en req,user et le token en req.token
+	//on va creer une methode instance (user pas User) dans User.js qui va faire ca...
+	req.user.removeToken(req.token)
+	.then(data => {
+	  res.status(200).send();
+	})
+	.catch(err => {
+ res.status(400).send();
+	});
+});
+
+
+
+
+
+///////////////////////////////////////////////////////////DELOGUER ROUTE EN ENLEVANT LE TOKEN
+
+
 ///////////////////////////////////////////////////////////SERVEUR LISTEN
 
 app.listen(port, () => {

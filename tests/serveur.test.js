@@ -133,29 +133,29 @@ describe("Test de Patch", () => {
 });
 
 
-describe("Test de Get users/me", () => {
-  it("Ca Devrait marcher ben", (done) => {
-    request(app)
-    .get('users/moi')
-    .set('x-auth', users[0].tokens[0].token)
-    .expect(200)
-    .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
-      expect(res.body._id).toBe(users[0]._id.toHexString())
-      expect(res.body.email).toBe(users[0].email)
-    })
-    .end(done());
-  });
-
-  it('de vrait retourner un 401', (done) => {
-    request(app)
-    .get('/users/moi')
-    //Si on set pas de 'x-auth'
-    .expect(401)
-    .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
-      expect(res.body).toBe({})
-    })
-    .end(done());
-  });
+// describe("Test de Get users/me", () => {
+//   it("Ca Devrait marcher ben", (done) => {
+//     request(app)
+//     .get('users/moi')
+//     .set('x-auth', users[0].tokens[0].token)
+//     .expect(200)
+//     .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
+//       expect(res.body._id).toBe(users[0]._id.toHexString())
+//       expect(res.body.email).toBe(users[0].email)
+//     })
+//     .end(done());
+//   });
+//
+//   it('de vrait retourner un 401', (done) => {
+//     request(app)
+//     .get('/users/moi')
+//     //Si on set pas de 'x-auth'
+//     .expect(401)
+//     .expect((res) => { //faut pas oublié qu on bloque la reponmse a donner que ca..
+//       expect(res.body).toBe({})
+//     })
+//     .end(done());
+//   });
 
 // it("devrait retourner une erreur de validation", (done) => {
 // 	let email = "benoit@info.com";
@@ -186,15 +186,47 @@ describe("Test de Get users/me", () => {
   //     .end(done());
   // });
 
-  it('devrait pas creer un user si meme email', (done) => {
-    request(app)
-      .post("/users")
-      .send({
-        email: "ben@axe-z.com",
-    		password: "abc1234",
-      })
-      .expect(400)
-      .end(done());
-  });
+  // it('devrait pas creer un user si meme email', (done) => {
+  //   request(app)
+  //     .post("/users")
+  //     .send({
+  //       email: "ben@axe-z.com",
+  //   		password: "abc1234",
+  //     })
+  //     .expect(400)
+  //     .end(done());
+  // });
+//});
 
+//		email: "ben@axe-z.com",
+//		password: "abc123",
+describe("Test de post User/login", () => {
+  it("Ca Devrait loguer le suer avec un retour d auth token ", () => {
+    request(app)
+     .post("/users/login")
+     .send({
+       email: users[1].email,
+       password: users[1].password
+     })
+     .expect(200)
+     .expect(res => {
+      expect(res.header["x-auth"]).toExist();
+     })
+        .end((e , res)=> {
+          if(e){
+            return done(e)
+          }
+
+          User.findById(users[1]._id)
+          .then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: 'auth',
+              token: res.header["x-auth"]
+            });
+            done();
+          }).catch(e => {
+            return done(e)
+          });
+        });
+  });
 });

@@ -46,30 +46,48 @@ UserSchema.methods.generateAuthToken = function() {
 	let user = this;
 	let access = "auth";
 	let token = jwt
-		.sign({ _id: user._id.toHexString(), access: access }, "secaxe").toString();
+		.sign({ _id: user._id.toHexString(), access: access }, "secaxe")
+		.toString();
 
 	user.tokens.push({ access, token });
-	return user.save().then(() => {	//met rien
+	return user.save().then(() => {
+		//met rien
 		return token;
 	});
 };
 
-UserSchema.statics.findByToken = function (token) {
-  var User = this;
-  var decoded;
-
-  try {
-    decoded = jwt.verify(token, 'secaxe');
-  } catch (e) {
-    return Promise.reject();
-  }
-
-  return User.findOne({
-    '_id': decoded._id,
-    'tokens.token': token,
-    'tokens.access': 'auth'
-  });
+//Fn normale, on a besoin du this
+UserSchema.methods.removeToken = function(token) {
+	let user = this;
+  //$pull est un truc mongo natif, qui si ca match avec token ici va retirer l info completement.
+	return user.update({
+		$pull: {
+			tokens: {
+				token: token
+			}
+		}
+	});
 };
+
+
+
+UserSchema.statics.findByToken = function(token) {
+	var User = this;
+	var decoded;
+
+	try {
+		decoded = jwt.verify(token, "secaxe");
+	} catch (e) {
+		return Promise.reject();
+	}
+
+	return User.findOne({
+		_id: decoded._id,
+		"tokens.token": token,
+		"tokens.access": "auth"
+	});
+};
+
 
 
 UserSchema.statics.findByCredentials = function (email, password) {
@@ -79,7 +97,7 @@ UserSchema.statics.findByCredentials = function (email, password) {
     if (!user) {
       return Promise.reject();
     }
-    //parce que bcrypt fonctionne avec un Callback et pas prom. lui il fait lui meme la promisse 
+    //parce que bcrypt fonctionne avec un Callback et pas prom. lui il fait lui meme la promisse
     return new Promise((resolve, reject) => {
       //bcrypt.compare lui entrer normal au post et lui creer avec hash et salt
       bcrypt.compare(password, user.password, (err, res) => {  //besoin des deux
