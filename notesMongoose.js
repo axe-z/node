@@ -1,15 +1,15 @@
 PART II ligne 800 GENRE...
-
-
-
 *************************************************************************************************************************************************************MONGOOSE************************************************************ ****************************************************************************************************************
-
+//connect :
+VA AVEC LE FICHIER CONFIG.JSON POUR CACHER LES VARIABLES, MOT DE PASSE ET ADRESSE.
 
 const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise; //ES6 faut dire quel type de promise.
 
-const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de mettre le port de defaut
+ pas besoin de DB comme en bas,
+// mongoose.connect('mongodb://localhost/TodoApp', {
+ mongoose.connect(process.env.MONGODB_URI, { //"mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp"
   useMongoClient: true,
 })
 .then(con => {
@@ -18,6 +18,10 @@ const db = mongoose.connect('mongodb://localhost/TodoApp', {  //pas besoin de me
 .catch(err => {
   console.log(err)
 });
+
+
+module.exports = {mongoose}
+
 
 IMPORTANT!!
 QUAND ON FAIT UN MODEL, DISONT TODO, MONGOOSE VA LE CREER DANS MONGO, MAIS L APPELER : todos EN MINUSCULE AU PLURIELS !!!! USER DEVIENT users. DANS LES QUERIES ON PREND LE MODEL, TODO OU USER, MAIS CA AFFECTERA USERS ET TODOS EN MINUSCULE.
@@ -1850,7 +1854,7 @@ DONC. DANS SEED.JS , ON REPLACE LE STRING QU ON AVAIT PAR LA VARIABLE, ET MEME C
 Bam
 
 
-
+ON VA AJOUTER DES VARIABLES D ENVIRONEMENT A HEROKU
 
 POUR PRODUCTION MAINTENANT:
 on va ajouter des variable a heroku,,,
@@ -1869,6 +1873,38 @@ tous les variables seront retournees
 
 *************************************CACHE  les variables secretes*************************************
 *************************************CACHE  les variables secretes*************************************
+
+*************************************ON ACHEVE... ENVOYER A HEROKU*************************************
+*************************************ON ACHEVE... ENVOYER A HEROKU*************************************
+
+QUAND ON OUVRE COMPASS , SI ON A L ADRESSE DE MLABS DANS LE CLIPBOARD, LA VRAI CONFIG VA SE FAIRE TOU SEUL
+mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp
+
+Hostname: ds155631.mlab.com
+Port: 55631
+Authentication
+Username: axe-z
+Password: •••••••
+Authentication Database: todoapp
+SSL
+SSH Tunnel
+Favorite Name
+e.g. Shared Dev, QA Box, PRODUCTION
+
+
+
+
+
+
+
+
+
+
+
+
+*************************************ON ACHEVE... ENVOYER A HEROKU*************************************
+*************************************ON ACHEVE... ENVOYER A HEROKU*************************************
+
 
 *************************************HORS SUJET ASYNC AWAIT*************************************
 ASYNC AWAIT
