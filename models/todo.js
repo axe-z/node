@@ -7,12 +7,28 @@ const Todo = mongoose.model('Todo', {
     trim: true        //va laisser au max 1 espace entre les mots. enleve le trop au debut et fin.
   },
   completed: {
-    type: Boolean
+    type: Boolean,
+    default: false
   },
   completedAt: {
-    type: Number
+    type: Number,
+    default: null
+  },
+  _creator:{
+    type: mongoose.Schema.Types.ObjectId,    //_id d ailleurs .. 
+    required: true
   }
 });
+
+
+
+
+module.exports = {Todo}
+
+
+
+
+
 
 // c est un constructor qui fait une instance de Todo.
 // let newTodo = new Todo({
@@ -29,6 +45,3 @@ const Todo = mongoose.model('Todo', {
 // .catch(err => {
 //   console.log(err)
 // });
-
-
-module.exports = {Todo}

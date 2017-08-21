@@ -1647,11 +1647,140 @@ SEND ET VOILA. LE TOKEN EST COMPLETEMENT ENLEVÉ DE CETTE FICHE.
 *************************************DÉ LOGuer************************************************
 
 
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+*************************************Tout connecter ensemble************************************************
+
+Todo.js :
+AJOUTER _CREATOR , QUI SERA LE USER.
+mongoose.Schema.Types.ObjectId EST UN _ID D AILLEURS , D UN AUTRE MODEL=>
+
+const Todo = mongoose.model('Todo', {
+  text: {
+    type: String,
+    required: true,
+    minlenght: 3,
+    trim: true
+  },
+  completed: {
+    type: Boolean,
+    default: false
+  },
+  completedAt: {
+    type: Number,
+    default: null
+  },
+  _creator:{
+    type: mongoose.Schema.Types.ObjectId,    //_id d ailleurs ..
+    required: true
+  }
+});
+
+ON CHANGE RIEN A USER.JS
+
+DANS LE DATA POUR LES TEST, ON A DES TODOS,
+POUR LES USERS , ON AVAIT CREER DES IDS. ON VA LES JOINDRE A TODO , _ CREATOR.
+
+const userOneId = new ObjectID();
+const userTwoId = new ObjectID();
+const todos = [
+	{
+		_id: new ObjectID(),
+		text: "premier test todo",
+    _creator: userOneId   ///AJOUT DU ID
+	},
+	{
+		_id: new ObjectID(),
+		text: "deuxieme test todo",
+		completed: true,
+		completedAt: Date.now(),
+    _creator: userTwoId   ///AJOUT DU ID
+	}
+];
 
 
 
+MAINTENANT DANS SERVEUR.JS
+ON VA  CHANGER LE POST QUI AJOUTE LES TODO POUR ETRE CONFORME A LA NOUVELLE FORME DU MODEL :
 
 
+///POST ROUTE, AVEC AJOUT DU USER , AUTENTHIFICATION, A LUI ACCES A USER. POUR MERGER LES DEUX MODELS
+authentification RETOURNE UN USER ET UN TOKEN, ON A PAS BESOIN DU TOKEN , MAIS OUI DU USER.
+
+//ligne 50
+app.post("/todos", authentification, (req, res) => {
+	const todo = new Todo({
+		text: req.body.text,
+		completed: false, 					 //pas besoin , deja a false par defaut.
+		completedAt: Date.now(),
+		_creator: req.user._id      // provient de authentification , le middleware homemade
+	})
+		.save()
+		.then(todo => {
+			 res.send(todo)   //ce qui retourne dans postman dans la boite response
+		})
+		.catch(err => {
+			res.status(400).send(err);
+		});
+});
+
+
+micro changement...
+
+pour get/todos  ligne 77
+
+app.get("/todos", authentification, (req, res) => {
+  Todo.find({_creator: req.user._id})
+  .then(todo => {
+    res.send({todo})  //on le met dans un boj, pour se donner des options, facile d ajouter a un obj.
+    //console.log(data[0].text);  //test todo text
+  })
+  .catch(err => {
+    res.status(400).send(err);
+  });
+});
+
+
+ON VA TOUT DROPER,
+REFAIRE UN USER, COPIER LE X-AUTH
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1OTlhMjQyMmM2NGRjMDY1ZGQ5YWUwMGEiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNTAzMjc0MDE4fQ.aTRVsTmMrjzQKOkJlippFQlxZNt021shFSE5uZofUB4
+FAIRE ENSUITE UN TODO, EN AJOUTANT LE X-AUTH DANS LE HEADER, ET BAM !
+{
+    "todo": [
+        {
+            "_id": "599a245e2b42db65e4979534",
+            "text": "ceci vient d ailleurs (postman) suite 2",
+            "_creator": "599a2422c64dc065dd9ae00a",
+            "__v": 0,
+            "completedAt": 1503274078161,
+            "completed": false
+        }
+    ]
+}
+
+
+
+Donc maintenant tou est secure, je vais dropper la db et repartir
+
+1. creer un post user, sans x auth, on ne peut pas faire de todo=>
+2. avec le code x-auth faire un todo associer au user=>
+3. faire un get todo, check !
+4 faire un get todo par id , check !
+5. faire un delete de todo avec id et auth. , check !
+6. pu de todo !
+7- refaire un nouveau todo  , check !
+8- faire un update de todo patch avec id et auth toujours la .. , check !
+9- reste a fairfe les test de user , mais ca regarde bien ...
+
+git status 
+git add .
+git commit -am 'fin des route'
+git push
 
 
 

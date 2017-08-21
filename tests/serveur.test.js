@@ -39,6 +39,7 @@ beforeEach(populateTodos);
   //
 	// 	request(app)
 	// 		.post("/todos")
+    //.set('x-auth', users[0].tokens[0].token)  //plus tard
 	// 		.send({ text: text })
 	// 		.expect(200)
 	// 		.expect(res => {
@@ -61,10 +62,11 @@ beforeEach(populateTodos);
 // it("test de GET", done => {
 // 	request(app)
 // 		.get("/todos")
+  //.set('x-auth', users[0].tokens[0].token)  //plus tard
 // 		.expect(200)
 // 		.expect(res => {
 //       console.log(res.body.todos.length);
-// 			expect(res.body.todos.length).toBe(2);
+// 			expect(res.body.todos.length).toBe(1);  //avec auth il revient un
 // 		})
 // 		.end(done());
 // });
@@ -81,6 +83,7 @@ beforeEach(populateTodos);
 	it("Ca Devrait donner du bon", done => {
 		request(app)
 			.get(`/todos/${todos[0]._id.toHexString()}`) //convertie un object en string...
+      //     .set('x-auth', users[0].tokens[0].token)
 			.expect(200)
 			.expect((res) => {
         //   le todo vient de serveur.js
@@ -89,7 +92,14 @@ beforeEach(populateTodos);
 			.end(done);
 	});
 
-
+  it("Ca Devrait pas donner si le id est pas le meme que creator", done => {
+		request(app)
+    //cherche id du 1 et auth du 2 ce devrait chier
+			.get(`/todos/${todos[1]._id.toHexString()}`) //convertie un object en string...
+      //     .set('x-auth', users[0].tokens[0].token)
+			.expect(404)
+			.end(done);
+	});
 });
 */
 describe("Test de Patch", () => {
@@ -219,7 +229,7 @@ describe("Test de post User/login", () => {
 
           User.findById(users[1]._id)
           .then(user => {
-            expect(user.tokens[0]).toInclude({
+            expect(user.tokens[1]).toInclude({
               access: 'auth',
               token: res.header["x-auth"]
             });
@@ -230,3 +240,12 @@ describe("Test de post User/login", () => {
         });
   });
 });
+
+
+
+//
+// describe("Test de delete user/moi/token", () => {
+//   it("Ca Devrait retirer le auth token sur logout", (done) => {
+//
+//   });
+// });
