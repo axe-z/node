@@ -1765,32 +1765,110 @@ FAIRE ENSUITE UN TODO, EN AJOUTANT LE X-AUTH DANS LE HEADER, ET BAM !
 
 
 
-Donc maintenant tou est secure, je vais dropper la db et repartir
+Donc maintenant tout est secure, je vais dropper la db et repartir
 
 1. creer un post user, sans x auth, on ne peut pas faire de todo=>
 2. avec le code x-auth faire un todo associer au user=>
 3. faire un get todo, check !
-4 faire un get todo par id , check !
+4. faire un get todo par id , check !
 5. faire un delete de todo avec id et auth. , check !
 6. pu de todo !
 7- refaire un nouveau todo  , check !
-8- faire un update de todo patch avec id et auth toujours la .. , check !
+8- faire un update de todo -patch- avec id et auth toujours la .. , check !
 9- reste a fairfe les test de user , mais ca regarde bien ...
 
-git status 
+git status
 git add .
 git commit -am 'fin des route'
 git push
 
 
+*************************************CACHE  les variables secretes*************************************
+*************************************CACHE  les variables secretes*************************************
+POUR LOCAL : dev et test, production c est apres.
+
+pas un bonne idee d avoir les config variable en display dans nos fichiers=>
+donc le port, le mot secret pour le JWT.
+le password moins lui, on a besoin a la fois du vrai et du hashed.
+
+par exemple , config.json :
+{
+  "test":  {
+    "PORT": 3000,
+    "MONGODB_URI": "mongodb://localhost:27017/TodoAppTest"
+  },
+  "development":  {
+    "PORT": 3000,
+    "MONGODB_URI": "mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp"
+  }
+}
+
+ensuite refaire config.js sans donner de valeurs.
+
+
+const env = process.env.NODE_ENV || 'development';  //soit test ou dev
+
+
+ensuite :
+if(env === 'development' || env === 'test') {
+  const config = require('./config.json'); //amener le json
+//  CONSOLE.LOG(CONFIG) OBJECT COMPLET.
+  const envConfig = config[env];  ///va etre test ou development
+  console.log(envConfig)  //retourn le json de lui en fonction
+  console.log(Object.keys(envConfig)); // sort un array des keys [ 'PORT', 'MONGODB_URI' ]
+  // ensuite setter  process.env , donc le PORT et MONGODB_URI
+  Object.keys(envConfig).forEach( key => {
+   process.env[key] = envConfig[key] //sort la value
+  });
+}
+
+le tout set le PORT et MONGODB_URI selon l environement determiner dans le package.
+
+
+
+MAINTENANT ON VA S OCCUPER DU MOTSECRET POUR JWT :
+
+process.env.JWT_SECRET
+{
+  "test":  {
+    "PORT": 3000,
+    "MONGODB_URI": "mongodb://localhost:27017/TodoAppTest",
+    "JWT_SECRET": "secaxe1895589585858"
+  },
+  "development":  {
+    "PORT": 3000,
+    "MONGODB_URI": "mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp",
+    "JWT_SECRET": "secaxe18956542854881"  //pas pareil.
+  }
+}
+
+
+PAS BESOION D IMPORTER LE CONFIG, UNE FOIS DNAS LE PROCESS ENV DANS LE SERVEUR C EST DIPO PARTOUT !!
+
+DONC. DANS SEED.JS , ON REPLACE LE STRING QU ON AVAIT PAR LA VARIABLE, ET MEME CHOSE DANS USER.JS
+
+Bam
 
 
 
 
+POUR PRODUCTION MAINTENANT:
+on va ajouter des variable a heroku,,,
+dans le terminal :
+1- heroku config:set NAME=AXE-Z
+ca config le nom ,
+2-heroku config:get NAME
+retourne AXE-Z
+3-heroku config:unset NAME
+va detruire la variable NAME
+4- heroku config:set JWT_SECRET=axesec58585899
+ca va ajouter la variable JWT_SECRET=axesec58585899
+5-pour verifier : heroku config
+tous les variables seront retournees
 
 
-
-
+*************************************CACHE  les variables secretes*************************************
+*************************************CACHE  les variables secretes*************************************
 
 *************************************HORS SUJET ASYNC AWAIT*************************************
 ASYNC AWAIT

@@ -14,7 +14,7 @@ const users = [
 		tokens: [
 			{
 				access: "auth",
-				token: jwt.sign({ userOneId, access: "auth" }, "secaxe").toString()
+				token: jwt.sign({ userOneId, access: "auth" }, process.env.JWT_SECRET).toString()
 			}
 		]
 	},
@@ -25,7 +25,7 @@ const users = [
 		tokens: [
 			{
 				access: "auth",
-				token: jwt.sign({ userTwoId, access: "auth" }, "secaxe").toString()
+				token: jwt.sign({ userTwoId, access: "auth" }, process.env.JWT_SECRET).toString()
 			}
 		]
 	}

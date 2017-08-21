@@ -1,5 +1,5 @@
 ///////env
-const env = require('./config');
+const env = require('./config/config');
 
 ///////////////////////////////////////////////////////////REQUIRES
 

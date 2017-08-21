@@ -19,10 +19,10 @@ const data = {
 }
 const token = {
   data,
-  hash: SHA256(JSON.stringify(data)+ 'somesecret').toString()
+  hash: SHA256(JSON.stringify(data)+ process.env.JWT_SECRET).toString()
 }
 
- const resultHash = SHA256(JSON.stringify(token.data) + 'somesecret').toString();
+ const resultHash = SHA256(JSON.stringify(token.data) + process.env.JWT_SECRET).toString();
 
 if(resultHash === token.hash) {
   console.log('Le data n\'a pas été tempéré')
