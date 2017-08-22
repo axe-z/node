@@ -1856,6 +1856,9 @@ Bam
 
 ON VA AJOUTER DES VARIABLES D ENVIRONEMENT A HEROKU
 
+!!IMPORTANT VA FALLOIR AJOUTER A HEROKU LE MONGODB_URI DE MLABS :
+heroku config:set MONGODB_URI=mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp
+
 POUR PRODUCTION MAINTENANT:
 on va ajouter des variable a heroku,,,
 dans le terminal :
@@ -1892,13 +1895,20 @@ Favorite Name
 e.g. Shared Dev, QA Box, PRODUCTION
 
 
+GIT PUSH HEROKU MASTER, LA COMMANDE PREND 20-30 SEC
+GIT CONFIG NOUS DONNE LE JWT_SECRET: AXESEC58...
 
 
+postman par heroku :
+post
+https://radiant-eyrie-32601.herokuapp.com/users
 
+{
+	"email": "infoconfig3@axe-z.com",
+	"password": "01234567"
+}
 
-
-
-
+je recois un 503 ... service pas dispo...
 
 
 

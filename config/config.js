@@ -11,10 +11,11 @@ if(env === 'development' || env === 'test') {
   Object.keys(envConfig).forEach( key => {
    process.env[key] = envConfig[key] //sort la value
   });
+   console.log('env-*******', env)
 }
 
 //on a un fichier json
-//console.log('env-*******', env)
+
 // if(env === 'development'){
 //   process.env.PORT = 3000;
 //   process.env.MONGODB_URI = 'mongodb://axe-z:0123456@ds155631.mlab.com:55631/todoapp';
@@ -22,7 +23,7 @@ if(env === 'development' || env === 'test') {
 //   process.env.PORT = 3000;
 //   process.env.MONGODB_URI = 'mongodb://localhost:27017/TodoAppTest';
 // }
-
+//
 // module.exports = {
 //  env
 // }

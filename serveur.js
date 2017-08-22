@@ -269,7 +269,7 @@ app.post("/users", (req, res) => {
 
 	let user = new User(body);
 
-	user.save()    //BUGger on doit remmetre user.save et ne pas chainer ici !!
+	user.save()
 		.then(() => {
 			return user.generateAuthToken();
 		})
